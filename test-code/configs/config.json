@@ -1,0 +1,12 @@
+{
+    "subdomain" : "snmsoft",
+    "hash" : "dbf1a2144301ac365925d1b1f0d3d10d",
+    "user" : "nik7101@yandex.ru",
+    "cache-ttl" : 10,
+    "cache-file" : "cache.json",
+    "fields-cache-file" : "fields_cache.json",
+    "last-user-cache-file" : "last_user.json",
+    "all-caches-folder" : "./caches",
+    "company-caches-folder" : "./snmsoft",
+    "nums-to-check-phone" : 5
+}

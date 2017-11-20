@@ -1,0 +1,878 @@
+{
+    "account": {
+        "amojo_base_url": "https://amojo.amocrm.ru",
+        "amojo_rights": {
+            "can_direct": true,
+            "can_group_create": true
+        },
+        "country": "ru",
+        "currency": "RUB",
+        "current_user": 845532,
+        "custom_fields": {
+            "2027": [
+                {
+                    "code": "SKU",
+                    "disabled": "0",
+                    "id": "434337",
+                    "multiple": "N",
+                    "name": "Артикул",
+                    "sort": 0,
+                    "type_id": "1"
+                },
+                {
+                    "code": "QUANTITY",
+                    "disabled": "0",
+                    "id": "434339",
+                    "multiple": "N",
+                    "name": "Количество",
+                    "sort": 1,
+                    "type_id": "2"
+                },
+                {
+                    "code": "PRICE",
+                    "disabled": "0",
+                    "id": "434341",
+                    "multiple": "N",
+                    "name": "Цена",
+                    "sort": 2,
+                    "type_id": "2"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "434343",
+                    "multiple": "N",
+                    "name": "Цвет",
+                    "sort": 503,
+                    "type_id": "1"
+                }
+            ],
+            "companies": [
+                {
+                    "code": "PHONE",
+                    "disabled": "0",
+                    "enums": {
+                        "15030": "WORK",
+                        "15032": "WORKDD",
+                        "15034": "MOB",
+                        "15036": "FAX",
+                        "15038": "HOME",
+                        "15040": "OTHER"
+                    },
+                    "id": "6336",
+                    "multiple": "Y",
+                    "name": "Телефон",
+                    "sort": 4,
+                    "type_id": "8"
+                },
+                {
+                    "code": "EMAIL",
+                    "disabled": "0",
+                    "enums": {
+                        "15042": "WORK",
+                        "15044": "PRIV",
+                        "15046": "OTHER"
+                    },
+                    "id": "6338",
+                    "multiple": "Y",
+                    "name": "Email",
+                    "sort": 6,
+                    "type_id": "8"
+                },
+                {
+                    "code": "WEB",
+                    "disabled": "0",
+                    "id": "6340",
+                    "multiple": "N",
+                    "name": "Web",
+                    "sort": 8,
+                    "type_id": "7"
+                },
+                {
+                    "code": "ADDRESS",
+                    "disabled": "0",
+                    "id": "6344",
+                    "multiple": "N",
+                    "name": "Адрес",
+                    "sort": 12,
+                    "type_id": "9"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "22208",
+                    "multiple": "N",
+                    "name": "Количество сотрудников",
+                    "sort": 500,
+                    "type_id": "2"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "22210",
+                    "multiple": "N",
+                    "name": "Количество продавцов",
+                    "sort": 501,
+                    "type_id": "2"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "enums": {
+                        "51812": "Excel",
+                        "51814": "CRM",
+                        "51816": "Нигде"
+                    },
+                    "id": "22212",
+                    "multiple": "N",
+                    "name": "Где ведут учет",
+                    "sort": 502,
+                    "type_id": "4"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "22214",
+                    "multiple": "N",
+                    "name": "Есть отдел продаж",
+                    "sort": 503,
+                    "type_id": "3"
+                }
+            ],
+            "contacts": [
+                {
+                    "code": "POSITION",
+                    "disabled": "0",
+                    "id": "6334",
+                    "multiple": "N",
+                    "name": "Должность",
+                    "sort": 5,
+                    "type_id": "1"
+                },
+                {
+                    "code": "PHONE",
+                    "disabled": "0",
+                    "enums": {
+                        "15030": "WORK",
+                        "15032": "WORKDD",
+                        "15034": "MOB",
+                        "15036": "FAX",
+                        "15038": "HOME",
+                        "15040": "OTHER"
+                    },
+                    "id": "6336",
+                    "multiple": "Y",
+                    "name": "Телефон",
+                    "sort": 4,
+                    "type_id": "8"
+                },
+                {
+                    "code": "EMAIL",
+                    "disabled": "0",
+                    "enums": {
+                        "15042": "WORK",
+                        "15044": "PRIV",
+                        "15046": "OTHER"
+                    },
+                    "id": "6338",
+                    "multiple": "Y",
+                    "name": "Email",
+                    "sort": 6,
+                    "type_id": "8"
+                },
+                {
+                    "code": "IM",
+                    "disabled": "0",
+                    "enums": {
+                        "15048": "SKYPE",
+                        "15050": "ICQ",
+                        "15052": "JABBER",
+                        "15054": "GTALK",
+                        "15056": "MSN",
+                        "15058": "OTHER"
+                    },
+                    "id": "6342",
+                    "multiple": "Y",
+                    "name": "Мгн. сообщения",
+                    "sort": 4,
+                    "type_id": "8"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "421958",
+                    "multiple": "N",
+                    "name": "Поле1",
+                    "sort": 507,
+                    "type_id": "1"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "421960",
+                    "multiple": "N",
+                    "name": "Поле2",
+                    "sort": 508,
+                    "type_id": "1"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "421962",
+                    "multiple": "N",
+                    "name": "Поле3",
+                    "sort": 509,
+                    "type_id": "1"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "421964",
+                    "multiple": "N",
+                    "name": "Поле4",
+                    "sort": 510,
+                    "type_id": "1"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "421968",
+                    "multiple": "N",
+                    "name": "Поле 5",
+                    "sort": 511,
+                    "type_id": "1"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "421970",
+                    "multiple": "N",
+                    "name": "Поле 6",
+                    "sort": 512,
+                    "type_id": "1"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "421972",
+                    "multiple": "N",
+                    "name": "Поле 7",
+                    "sort": 513,
+                    "type_id": "1"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "421974",
+                    "multiple": "N",
+                    "name": "Поле 8",
+                    "sort": 514,
+                    "type_id": "1"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "421976",
+                    "multiple": "N",
+                    "name": "Поле 9",
+                    "sort": 515,
+                    "type_id": "1"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "421978",
+                    "multiple": "N",
+                    "name": "Поле 10",
+                    "sort": 516,
+                    "type_id": "1"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "421980",
+                    "multiple": "N",
+                    "name": "Поле 11",
+                    "sort": 517,
+                    "type_id": "1"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "421982",
+                    "multiple": "N",
+                    "name": "Поле 12",
+                    "sort": 518,
+                    "type_id": "1"
+                },
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "enums": {
+                        "935350": "вар1",
+                        "935352": "вар2",
+                        "935354": "вар3",
+                        "935356": "вар4",
+                        "935358": "вар5",
+                        "935360": "вар6"
+                    },
+                    "id": "421984",
+                    "multiple": "N",
+                    "name": "Тип",
+                    "sort": 506,
+                    "type_id": "5"
+                }
+            ],
+            "customers": [],
+            "leads": [
+                {
+                    "code": "",
+                    "disabled": "0",
+                    "id": "410978",
+                    "multiple": "N",
+                    "name": "что-то",
+                    "sort": 500,
+                    "type_id": "1"
+                },
+                {
+                    "code": "UTM_SOURCE",
+                    "disabled": "1",
+                    "id": "430517",
+                    "multiple": "N",
+                    "name": "Источник трафика",
+                    "sort": 10002,
+                    "type_id": "1"
+                },
+                {
+                    "code": "UTM_MEDIUM",
+                    "disabled": "1",
+                    "id": "430519",
+                    "multiple": "N",
+                    "name": "Тип трафика",
+                    "sort": 10003,
+                    "type_id": "1"
+                },
+                {
+                    "code": "UTM_CAMPAIGN",
+                    "disabled": "1",
+                    "id": "430521",
+                    "multiple": "N",
+                    "name": "Название рекламной кампании",
+                    "sort": 10004,
+                    "type_id": "1"
+                },
+                {
+                    "code": "UTM_TERM",
+                    "disabled": "1",
+                    "id": "430523",
+                    "multiple": "N",
+                    "name": "Ключевое слово кампании",
+                    "sort": 10005,
+                    "type_id": "1"
+                },
+                {
+                    "code": "GA_UTM",
+                    "disabled": "1",
+                    "id": "430525",
+                    "multiple": "N",
+                    "name": "GA UTM",
+                    "sort": 10006,
+                    "type_id": "1"
+                }
+            ]
+        },
+        "customers_enabled": "Y",
+        "date_format": "d.m.Y",
+        "date_pattern": "d.m.Y H:i",
+        "groups": [
+            {
+                "id": 53910,
+                "name": "Технический отдел"
+            }
+        ],
+        "id": "11021694",
+        "language": "ru",
+        "leads_statuses": [
+            {
+                "color": "#98cbff",
+                "editable": "Y",
+                "id": 11021700,
+                "name": "Холодный контакт",
+                "pipeline_id": 179028,
+                "sort": 10
+            },
+            {
+                "color": "#ffff99",
+                "editable": "Y",
+                "id": 11021703,
+                "name": "Есть интерес к продукту",
+                "pipeline_id": 179028,
+                "sort": 20
+            },
+            {
+                "color": "#eb93ff",
+                "editable": "Y",
+                "id": 11021706,
+                "name": "Проведена презентация",
+                "pipeline_id": 179028,
+                "sort": 30
+            },
+            {
+                "color": "#c1e0ff",
+                "editable": "Y",
+                "id": 11021709,
+                "name": "Тестирует продукт",
+                "pipeline_id": 179028,
+                "sort": 40
+            },
+            {
+                "color": "#ff8f92",
+                "editable": "Y",
+                "id": 11055897,
+                "name": "Отправлено КП",
+                "pipeline_id": 179028,
+                "sort": 50
+            },
+            {
+                "color": "#f9deff",
+                "editable": "Y",
+                "id": 11056353,
+                "name": "Принимает решение",
+                "pipeline_id": 179028,
+                "sort": 60
+            },
+            {
+                "color": "#ffdbdb",
+                "editable": "Y",
+                "id": 11056356,
+                "name": "Подписание договора",
+                "pipeline_id": 179028,
+                "sort": 70
+            },
+            {
+                "color": "#87f2c0",
+                "editable": "Y",
+                "id": 11056359,
+                "name": "Выставлен счет",
+                "pipeline_id": 179028,
+                "sort": 80
+            },
+            {
+                "color": "#CCFF66",
+                "editable": "N",
+                "id": 142,
+                "name": "Успешно реализован",
+                "pipeline_id": 179028,
+                "sort": 10000
+            },
+            {
+                "color": "#D5D8DB",
+                "editable": "N",
+                "id": 143,
+                "name": "Закрыто и не реализовано",
+                "pipeline_id": 179028,
+                "sort": 11000
+            }
+        ],
+        "limits": {
+            "active_deals_count": false,
+            "contacts_count": false,
+            "users_count": false
+        },
+        "mobile_feature_version": 3,
+        "name": "SNMsoft",
+        "note_types": [
+            {
+                "code": "DEAL_CREATED",
+                "editable": "N",
+                "id": 1,
+                "name": ""
+            },
+            {
+                "code": "CONTACT_CREATED",
+                "editable": "N",
+                "id": 2,
+                "name": ""
+            },
+            {
+                "code": "DEAL_STATUS_CHANGED",
+                "editable": "N",
+                "id": 3,
+                "name": ""
+            },
+            {
+                "code": "COMMON",
+                "editable": "Y",
+                "id": 4,
+                "name": ""
+            },
+            {
+                "code": "ATTACHEMENT",
+                "editable": "N",
+                "id": 5,
+                "name": ""
+            },
+            {
+                "code": "CALL",
+                "editable": "N",
+                "id": 6,
+                "name": ""
+            },
+            {
+                "code": "MAIL_MESSAGE",
+                "editable": "N",
+                "id": 7,
+                "name": ""
+            },
+            {
+                "code": "MAIL_MESSAGE_ATTACHMENT",
+                "editable": "N",
+                "id": 8,
+                "name": ""
+            },
+            {
+                "code": "EXTERNAL_ATTACH",
+                "editable": "N",
+                "id": 9,
+                "name": ""
+            },
+            {
+                "code": "CALL_IN",
+                "editable": "N",
+                "id": 10,
+                "name": ""
+            },
+            {
+                "code": "CALL_OUT",
+                "editable": "N",
+                "id": 11,
+                "name": ""
+            },
+            {
+                "code": "COMPANY_CREATED",
+                "editable": "N",
+                "id": 12,
+                "name": ""
+            },
+            {
+                "code": "TASK_RESULT",
+                "editable": "N",
+                "id": 13,
+                "name": ""
+            },
+            {
+                "code": "CHAT",
+                "editable": "N",
+                "id": 17,
+                "name": ""
+            },
+            {
+                "code": "MAX_SYSTEM",
+                "editable": "N",
+                "id": 99,
+                "name": ""
+            },
+            {
+                "code": "DROPBOX",
+                "editable": "N",
+                "id": 101,
+                "name": "Ссылка"
+            },
+            {
+                "code": "SMS_IN",
+                "editable": "N",
+                "id": 102,
+                "name": "Входящее"
+            },
+            {
+                "code": "SMS_OUT",
+                "editable": "N",
+                "id": 103,
+                "name": "Исходящее"
+            }
+        ],
+        "notifications_base_url": "https://notifications.amocrm.ru",
+        "notifications_ws_url": "wss://notifications.amocrm.ru",
+        "notifications_ws_url_v2": "wss://ws.amocrm.ru/snmsoft/v2/rtm?stand=v3",
+        "pipelines": {
+            "179028": {
+                "id": 179028,
+                "is_main": true,
+                "label": "Воронка",
+                "leads": 5,
+                "name": "Воронка",
+                "sort": 1,
+                "statuses": {
+                    "11021700": {
+                        "color": "#98cbff",
+                        "editable": "Y",
+                        "id": 11021700,
+                        "name": "Холодный контакт",
+                        "pipeline_id": 179028,
+                        "sort": 10
+                    },
+                    "11021703": {
+                        "color": "#ffff99",
+                        "editable": "Y",
+                        "id": 11021703,
+                        "name": "Есть интерес к продукту",
+                        "pipeline_id": 179028,
+                        "sort": 20
+                    },
+                    "11021706": {
+                        "color": "#eb93ff",
+                        "editable": "Y",
+                        "id": 11021706,
+                        "name": "Проведена презентация",
+                        "pipeline_id": 179028,
+                        "sort": 30
+                    },
+                    "11021709": {
+                        "color": "#c1e0ff",
+                        "editable": "Y",
+                        "id": 11021709,
+                        "name": "Тестирует продукт",
+                        "pipeline_id": 179028,
+                        "sort": 40
+                    },
+                    "11055897": {
+                        "color": "#ff8f92",
+                        "editable": "Y",
+                        "id": 11055897,
+                        "name": "Отправлено КП",
+                        "pipeline_id": 179028,
+                        "sort": 50
+                    },
+                    "11056353": {
+                        "color": "#f9deff",
+                        "editable": "Y",
+                        "id": 11056353,
+                        "name": "Принимает решение",
+                        "pipeline_id": 179028,
+                        "sort": 60
+                    },
+                    "11056356": {
+                        "color": "#ffdbdb",
+                        "editable": "Y",
+                        "id": 11056356,
+                        "name": "Подписание договора",
+                        "pipeline_id": 179028,
+                        "sort": 70
+                    },
+                    "11056359": {
+                        "color": "#87f2c0",
+                        "editable": "Y",
+                        "id": 11056359,
+                        "name": "Выставлен счет",
+                        "pipeline_id": 179028,
+                        "sort": 80
+                    },
+                    "142": {
+                        "color": "#CCFF66",
+                        "editable": "N",
+                        "id": 142,
+                        "name": "Успешно реализован",
+                        "pipeline_id": 179028,
+                        "sort": 10000
+                    },
+                    "143": {
+                        "color": "#D5D8DB",
+                        "editable": "N",
+                        "id": 143,
+                        "name": "Закрыто и не реализовано",
+                        "pipeline_id": 179028,
+                        "sort": 11000
+                    }
+                },
+                "value": 179028
+            },
+            "234889": {
+                "id": 234889,
+                "is_main": false,
+                "label": "Новая воронка",
+                "leads": 0,
+                "name": "Новая воронка",
+                "sort": 2,
+                "statuses": {
+                    "11572309": {
+                        "color": "#99ccff",
+                        "editable": "Y",
+                        "id": 11572309,
+                        "name": "Первичный контакт",
+                        "pipeline_id": 234889,
+                        "sort": 10
+                    },
+                    "11572312": {
+                        "color": "#ffff99",
+                        "editable": "Y",
+                        "id": 11572312,
+                        "name": "Переговоры",
+                        "pipeline_id": 234889,
+                        "sort": 20
+                    },
+                    "11572315": {
+                        "color": "#ffcc66",
+                        "editable": "Y",
+                        "id": 11572315,
+                        "name": "Принимают решение",
+                        "pipeline_id": 234889,
+                        "sort": 30
+                    },
+                    "142": {
+                        "color": "#CCFF66",
+                        "editable": "N",
+                        "id": 142,
+                        "name": "Успешно реализовано",
+                        "pipeline_id": 234889,
+                        "sort": 10000
+                    },
+                    "143": {
+                        "color": "#D5D8DB",
+                        "editable": "N",
+                        "id": 143,
+                        "name": "Закрыто и не реализовано",
+                        "pipeline_id": 234889,
+                        "sort": 11000
+                    }
+                },
+                "value": 234889
+            }
+        },
+        "short_date_pattern": {
+            "date": "d.m.Y",
+            "date_time": "d.m.Y H:i",
+            "time": "H:i"
+        },
+        "subdomain": "snmsoft",
+        "task_types": [
+            {
+                "code": "FOLLOW_UP",
+                "id": 1,
+                "name": "Связаться с клиентом"
+            },
+            {
+                "code": "CALL",
+                "id": 1,
+                "name": "Звонок"
+            },
+            {
+                "code": "MEETING",
+                "id": 2,
+                "name": "Встреча"
+            },
+            {
+                "code": "LETTER",
+                "id": 3,
+                "name": "Письмо"
+            }
+        ],
+        "time_format": "H:i:s",
+        "timezone": "Europe/Moscow",
+        "timezoneoffset": "+03:00",
+        "unsorted_on": "Y",
+        "users": [
+            {
+                "active": true,
+                "catalogs_access": "Y",
+                "free_user": false,
+                "group_id": 53910,
+                "id": "1408894",
+                "is_admin": null,
+                "language": null,
+                "last_name": "",
+                "login": "rusk12345@yandex.ru",
+                "mail_admin": "A",
+                "name": "sairon",
+                "phone_number": null,
+                "photo_url": null,
+                "rights_company_add": "A",
+                "rights_company_delete": "A",
+                "rights_company_edit": "A",
+                "rights_company_export": "A",
+                "rights_company_view": "A",
+                "rights_contact_add": "A",
+                "rights_contact_delete": "A",
+                "rights_contact_edit": "A",
+                "rights_contact_export": "A",
+                "rights_contact_view": "A",
+                "rights_lead_add": "A",
+                "rights_lead_delete": "A",
+                "rights_lead_edit": "A",
+                "rights_lead_export": "A",
+                "rights_lead_view": "A",
+                "rights_task_delete": "A",
+                "rights_task_edit": "A",
+                "unsorted_access": "Y"
+            },
+            {
+                "active": true,
+                "catalogs_access": "Y",
+                "free_user": false,
+                "group_id": 53910,
+                "id": "1115613",
+                "is_admin": "Y",
+                "language": "ru",
+                "last_name": "Катая",
+                "login": "kataya97@gmail.com",
+                "mail_admin": "A",
+                "name": "Дмитрий",
+                "phone_number": null,
+                "photo_url": null,
+                "rights_company_add": "A",
+                "rights_company_delete": "A",
+                "rights_company_edit": "A",
+                "rights_company_export": "A",
+                "rights_company_view": "A",
+                "rights_contact_add": "A",
+                "rights_contact_delete": "A",
+                "rights_contact_edit": "A",
+                "rights_contact_export": "A",
+                "rights_contact_view": "A",
+                "rights_lead_add": "A",
+                "rights_lead_delete": "A",
+                "rights_lead_edit": "A",
+                "rights_lead_export": "A",
+                "rights_lead_view": "A",
+                "rights_task_delete": "A",
+                "rights_task_edit": "A",
+                "unsorted_access": "Y"
+            },
+            {
+                "active": true,
+                "catalogs_access": "Y",
+                "free_user": false,
+                "group_id": 0,
+                "id": "845532",
+                "is_admin": "Y",
+                "language": "ru",
+                "last_name": null,
+                "login": "nik7101@yandex.ru",
+                "mail_admin": "A",
+                "name": "Николай Савушкин",
+                "phone_number": "",
+                "photo_url": null,
+                "rights_company_add": "A",
+                "rights_company_delete": "A",
+                "rights_company_edit": "A",
+                "rights_company_export": "A",
+                "rights_company_view": "A",
+                "rights_contact_add": "A",
+                "rights_contact_delete": "A",
+                "rights_contact_edit": "A",
+                "rights_contact_export": "A",
+                "rights_contact_view": "A",
+                "rights_lead_add": "A",
+                "rights_lead_delete": "A",
+                "rights_lead_edit": "A",
+                "rights_lead_export": "A",
+                "rights_lead_view": "A",
+                "rights_task_delete": "A",
+                "rights_task_edit": "A",
+                "unsorted_access": "Y"
+            }
+        ],
+        "version": 3
+    },
+    "server_time": 1510923874,
+    "timestamp": 1510923874.9096525
+}
