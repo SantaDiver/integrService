@@ -1,8 +1,14 @@
 from django.shortcuts import render
-
+from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 
+from pprint import pprint;
 # Create your views here.
 
+@csrf_exempt
 def basicHandler(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
+    if request.method == 'POST':
+        pprint(request.POST)
+        return HttpResponse("Yep")
+    elif request.method == 'GET':
+        return HttpResponse("It's get")
