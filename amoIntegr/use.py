@@ -9,7 +9,7 @@ from amoException import AmoException
 
 if __name__ == '__main__':
     try:
-        api = AmoIntegr('./configs/config.json')
+        # api = AmoIntegr('./configs/config.json')
 
         contact_data = {
             "Поле 5" : 911,
@@ -25,7 +25,7 @@ if __name__ == '__main__':
         
         
 
-        api.add_entity("leads", "Test123098", 1408894, lead_data, price=1011)
+        # api.add_entity("leads", "Test123098", 1408894, lead_data, price=1011)
         # api.add_entity("contacts", "Testttttttttttttttttttttttttt", 1408894, contact_data)
         # api.update_entity("leads", 12127855, time.time(), responsible_user_id=1408894)
         # api.add_entity("companies", "Test123098", 1408894, {})
@@ -44,7 +44,7 @@ if __name__ == '__main__':
         # pprint("-----------------------------------------")
         
         # api.unite_entities("contacts", e1, e2)
-        api.send_order_data([1,2])
+        # api.send_order_data([1,2])
         
     except AmoException as e:
         print('AmoException raised:', e.message)

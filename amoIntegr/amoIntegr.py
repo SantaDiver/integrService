@@ -13,8 +13,9 @@ from utils import entity_optional_params
 from amoException import AmoException
 
 class AmoIntegr(object):
-    def __init__(self, options_file_name):
-        self.cfg = json.load(open(options_file_name, "r"))
+    def __init__(self, user):
+        self.user = user
+        self.cfg = user.config
         self.request = requests.session()
         self._auth()
             
@@ -65,54 +66,31 @@ class AmoIntegr(object):
         return result_cache
             
     def cache_fields(self):
-        with open(self.cfg["cache-file"]) as data_file:    
-            cache = json.load(data_file)
+        cache = self.user.cache
         fields_cache = {}
         type_of_elements = ["contacts", "leads"]
         for type_of_element in type_of_elements:
             fields_cache[type_of_element] = self.cache_special_type_fields(type_of_element, cache)
-          
-        with open(self.cfg["fields-cache-file"], "w") as outfile:
-            json.dump(fields_cache, outfile, sort_keys=True, indent=4,
-                ensure_ascii=False)
+        
+        self.user.fields_cache = fields_cache
     
     def force_to_update_cache(self):
         resp = self.call('accounts/current')
         resp["timestamp"] = time.time()
-        with open(self.cfg["cache-file"], "w") as outfile:
-            json.dump(resp, outfile, sort_keys=True, indent=4,
-                ensure_ascii=False)
+        self.user.cache = resp
                 
     def update_cache(self):
-        if os.path.isfile(self.cfg["cache-file"]):
-            with open(self.cfg["cache-file"]) as data_file:    
-                cache = json.load(data_file)
-            if time.time() - cache["timestamp"] > int(self.cfg["cache-ttl"]):
-                self.force_to_update_cache()
-                self.cache_fields()
-        else:
+        cache = self.user.cache
+        if not "timestamp" in cache:
             self.force_to_update_cache()
             self.cache_fields()
-        
-    def read_cache(self, file_name):
-        if not os.path.isdir(self.cfg["all-caches-folder"]):
-            os.mkdir(self.cfg["all-caches-folder"])
-        os.chdir(self.cfg["all-caches-folder"])
-        
-        if not os.path.isdir(self.cfg["company-caches-folder"]):
-            os.mkdir(self.cfg["company-caches-folder"])
-        os.chdir(self.cfg["company-caches-folder"])
-        
-        self.update_cache()
-        with open(file_name) as data_file:    
-            cache = json.load(data_file)
-        os.chdir("..")
-        os.chdir("..")
-        
-        return cache
+        elif time.time() - cache["timestamp"] > int(self.cfg["cache-ttl"]):
+            self.force_to_update_cache()
+            self.cache_fields()
             
     def translate_fields(self, fields, type_of_element):
-        fields_cache = self.read_cache(self.cfg["fields-cache-file"])
+        self.update_cache()
+        fields_cache = self.user.fields_cache
         translated_fields = []
         for (name, value) in fields.items():
             if not value:
@@ -160,8 +138,9 @@ class AmoIntegr(object):
         if not entity_type in entity_optional_params:
             message = "Unknown entity type <%s>" % entity_type
             raise AmoException(message, None)
-            
-        cache = self.read_cache(self.cfg["cache-file"])
+        
+        self.update_cache()    
+        cache = self.user.cache
         if entity_type == "customers" and cache["account"]["customers_enabled"] != "Y":
                 raise AmoException("Customers are not enabled!", None)
         
@@ -208,7 +187,9 @@ class AmoIntegr(object):
             message = "Unknown entity type <%s>" % entity_type
             raise AmoException(message, None)
             
-        cache = self.read_cache(self.cfg["cache-file"])
+        self.update_cache()    
+        cache = self.user.cache
+        
         if entity_type == "customers" and cache["account"]["customers_enabled"] != "Y":
                 raise AmoException("Customers are not enabled!", None)
         
@@ -243,7 +224,7 @@ class AmoIntegr(object):
         
         if entity_type == "companies":
             entity_type = "company"
-        # print(json.dumps(json_to_pass, ensure_ascii=False))
+
         return self.call("%s/set" % entity_type, json_to_pass)
     
     # Works with contacts, leads, companies, tasks. Doesn't work with customers!
@@ -278,26 +259,14 @@ class AmoIntegr(object):
         if not isinstance(department_id, int):
             raise AmoException("Department id should be an integer!", None) 
         
-        if not os.path.isdir(self.cfg["all-caches-folder"]):
-            os.mkdir(self.cfg["all-caches-folder"])
-        os.chdir(self.cfg["all-caches-folder"])
-        
-        if not os.path.isdir(self.cfg["company-caches-folder"]):
-            os.mkdir(self.cfg["company-caches-folder"])
-        os.chdir(self.cfg["company-caches-folder"])
-        
-        if os.path.isfile(self.cfg["last-user-cache-file"]):
-            with open(self.cfg["last-user-cache-file"]) as data_file:    
-                users_cache = json.load(data_file)
-        else:
-            users_cache = {}
+        users_cache = self.user.last_user_cache
             
         if not "-1" in users_cache:
             users_cache["-1"] = -1
         if not "0" in users_cache:
             users_cache["0"] = -1
             
-        cache = self.read_cache(self.cfg["cache-file"])
+        cache = self.user.cache
         groups = cache["account"]["groups"]
         for group in groups:
             if not str(group["id"]) in users_cache:
@@ -328,18 +297,15 @@ class AmoIntegr(object):
         else:
             users_cache["-1"] = next_user_id
         
-        with open(self.cfg["last-user-cache-file"], "w") as outfile:
-            json.dump(users_cache, outfile, sort_keys=True, indent=4,
-                ensure_ascii=False)
-        
-        os.chdir("..")
-        os.chdir("..")
+        self.user.last_user_cache = users_cache
     
     # Elemnt type 1 - contact, 2 - lead, 3 - company
     def add_task(self, element_id, element_type, task_type, text, complete_till,
         **kwargs):
             
-        cache = self.read_cache(self.cfg["cache-file"])
+        self.update_cache()
+        cache = self.user.cache
+        
         task_types = [t for t in cache["account"]["task_types"] 
             if t["code"] == task_type or t["id"] == task_type or t["name"] == task_type]
         if not task_types:
@@ -396,7 +362,8 @@ class AmoIntegr(object):
             "responsible_user_id", "created_user_id", "complete_till", "task_type"]
             
         if "task_type" in kwargs:
-            cache = self.read_cache(self.cfg["cache-file"])
+            self.update_cache()
+            cache = self.user.cache
             task_type = kwargs["task_type"]
             task_types = [t for t in cache["account"]["task_types"] 
                 if t["code"] == task_type or t["id"] == task_type or t["name"] == task_type]
@@ -423,7 +390,6 @@ class AmoIntegr(object):
             }
         }
         
-        # print(json.dumps(json_to_pass, ensure_ascii=False))
         return self.call("tasks/set", json_to_pass)
     
     # Look up for filter param in here https://developers.amocrm.ru/rest_api/customers/list.php
@@ -440,8 +406,6 @@ class AmoIntegr(object):
                 message = "Param <%s> is incorrect" % key
                 raise AmoException(message, None)
                 
-        # pprint(params_to_pass)
-                
         response = self.call("customers/list", params_to_pass)
         
         return response
@@ -455,7 +419,9 @@ class AmoIntegr(object):
         if not isinstance(first_entity, list) or not isinstance(second_entity, list):
             raise AmoException("Waiting list as an entity!", None)
         
-        fields_cache = self.read_cache(self.cfg["fields-cache-file"])
+        self.update_cache()
+        fields_cache = self.user.fields_cache
+        
         united_entity = []
         for first_entity_field in first_entity:
             first_entity_id = first_entity_field["id"]
@@ -490,7 +456,8 @@ class AmoIntegr(object):
                 united_entity.append(second_entity_field)
                 
         return united_entity
-        
+    
+    # TODO: complete these function    
     def send_order_data(self, lead_data=[], contact_data=[], company_data=[], tags=[]):
         if not lead_data and not contact_data and not company_data:
             raise AmoException("Please send some data!", None)

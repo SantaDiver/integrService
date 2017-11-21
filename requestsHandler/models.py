@@ -27,4 +27,5 @@ class UserConfig(models.Model):
     config = JSONField(default={}, blank=True)
     cache = JSONField(default={}, blank=True)
     fields_cache = JSONField(default={}, blank=True)
+    last_user_cache = JSONField(default={}, blank=True)
     
