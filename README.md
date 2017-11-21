@@ -1,7 +1,8 @@
 # Заголовок
 
-Текст
+To restart Postgres
 
 ```
-code
+/etc/init.d/postgresql restart
+
 ```
