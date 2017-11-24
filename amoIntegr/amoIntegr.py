@@ -48,11 +48,16 @@ class AmoIntegr(object):
                 response = self.request.get(url, params = params)
             else:
                 response = self.request.post(url, json = params)
+            
+        if (response.status_code != 200 and not (response.status_code == 204 and
+            response.reason=="No Content")):
 
-        if (response.status_code != 200):
             message = "Status code is %s" % response.status_code
             raise AmoException(message, response)
-
+        
+        if (response.status_code == 204 and response.reason=="No Content"):
+            return {}
+            
         return response.json()["response"]
         
     def cache_special_type_fields(self, type_of_element, cache):
@@ -252,6 +257,9 @@ class AmoIntegr(object):
             entity_type = "company"
         response = self.call("%s/list" % entity_type, params_to_pass)
         
+        if response == {}:
+            response[entity_type] = []
+            
         return response
     
     #TODO: This should belong different class        
@@ -456,10 +464,69 @@ class AmoIntegr(object):
                 united_entity.append(second_entity_field)
                 
         return united_entity
+        
+    # TODO: complete these function
+    def find_duplicates(self, entity, entity_type, fields_to_find_duplicates):
+        
+        if not entity_type in entity_optional_params:
+            message = "Unknown entity type <%s>" % entity_type
+            raise AmoException(message, None)
+        
+        duplicates = []
+        self.update_cache()
+        fields_cache = self.user.fields_cache[entity_type]
+        
+        for field in fields_to_find_duplicates:
+            if not field in fields_cache:
+                message = "Field <%s> is incorrect" % field
+                raise AmoException(message, None)
+            if field in entity:
+                if fields_cache[field]["multiple"] == "N":
+                    duplicates += self.get_entity("contacts", 
+                        query=entity[field])["contacts"]
+                        
+                elif fields_cache[field]["multiple"] == "Y":
+                    for enum in fields_cache[field]["enums"]:
+                        enum_name = fields_cache[field]["enums"][enum]
+                        
+                        if enum in entity[field]:
+                            duplicates += self.get_entity("contacts", 
+                                query=entity[field][enum])["contacts"]
+                        
+                        if enum_name in entity[field]:
+                            duplicates += self.get_entity("contacts", 
+                                query=entity[field][enum_name])["contacts"]
+                    
+        return duplicates
     
     # TODO: complete these function    
-    def send_order_data(self, lead_data=[], contact_data=[], company_data=[], tags=[]):
+    def send_order_data(self, lead_data={}, contact_data={}, company_data={}, tags={}):
         if not lead_data and not contact_data and not company_data:
             raise AmoException("Please send some data!", None)
-
+        
+        self.update_cache()            
+        contact_duplicates = []
+        company_duplicates = []
+        if "fields-to-check-dups" in self.cfg:
+            if contact_data and "contacts" in self.cfg["fields-to-check-dups"]:
+                contact_duplicates += self.find_duplicates(contact_data, "contacts",
+                    self.cfg["fields-to-check-dups"]["contacts"])
+            
+            if company_data and "companies" in self.cfg["fields-to-check-dups"]:
+                contact_duplicates += self.find_duplicates(contact_data, "companies",
+                    self.cfg["fields-to-check-dups"]["companies"])
+                    
+                    
+        pprint(contact_duplicates)
+                    
+        if not contact_duplicates and not company_duplicates:
+            some=1
+        elif not contact_duplicates:
+            some=1
+        elif not company_duplicates:
+            some=1
+        else:
+            some=1
+                    
+                    
 

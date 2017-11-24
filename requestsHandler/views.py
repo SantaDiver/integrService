@@ -2,6 +2,8 @@ import json
 import logging
 import sys
 
+from pprint import pprint
+
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
@@ -29,7 +31,7 @@ def basicHandler(request):
     contact_data = {
         "Поле 5" : 911,
         "Должность" : "Some",
-        "Телефон" : {"WORK" : "123", "MOB" : "098"},
+        "Телефон" : {"WORK" : "2148354", "MOB" : "098"},
         "Тип" : ["вар1"],
         "Email" : {"WORK" : "email-mail"}
     }
@@ -38,7 +40,11 @@ def basicHandler(request):
         "что-то" : 1000000
     }
     
-    api.add_entity("leads", "Test123098", 1408894, lead_data, price=1011)
+    # api.add_entity("leads", "Test123098", 1408894, lead_data, price=1011)
+    # pprint(user_cfg.fields_cache)
+    # dups = api.find_duplicates(contact_data, "contacts", ["Телефон"])
+    
+    api.send_order_data(contact_data = contact_data)
     
     user_cfg.save()
         
