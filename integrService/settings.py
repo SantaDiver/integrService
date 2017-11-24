@@ -123,3 +123,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# Adding SNM code after this comment
+
+DADATA_KEY = "a25848ba56fb681960880dd73fe6e55849296121"
+DADATA_SECRET = "ad35dc25999cd6b03320be03f24fa14aa144fba8"

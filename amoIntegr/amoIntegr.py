@@ -465,7 +465,7 @@ class AmoIntegr(object):
                 
         return united_entity
         
-    # TODO: complete these function
+    # TODO: test this function. Check work with LISTS!!!
     def find_duplicates(self, entity, entity_type, fields_to_find_duplicates):
         
         if not entity_type in entity_optional_params:
@@ -499,7 +499,7 @@ class AmoIntegr(object):
                     
         return duplicates
     
-    # TODO: complete these function    
+    # TODO: complete this function    
     def send_order_data(self, lead_data={}, contact_data={}, company_data={}, tags={}):
         if not lead_data and not contact_data and not company_data:
             raise AmoException("Please send some data!", None)

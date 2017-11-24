@@ -10,6 +10,8 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from requestsHandler.models import UserConfig
 
+from dadata.plugins.django import DjangoDaDataClient
+
 sys.path.insert(0, '/home/ubuntu/workspace/amoIntegr')
 from amoIntegr import AmoIntegr
 from amoException import AmoException
@@ -44,7 +46,13 @@ def basicHandler(request):
     # pprint(user_cfg.fields_cache)
     # dups = api.find_duplicates(contact_data, "contacts", ["Телефон"])
     
-    api.send_order_data(contact_data = contact_data)
+    # api.send_order_data(contact_data = contact_data)
+    
+    client = DjangoDaDataClient()
+    
+    client.phone = "тел 7165219 доб139"
+    client.phone.request()
+    pprint(client.result.phone)
     
     user_cfg.save()
         
