@@ -262,7 +262,9 @@ class AmoIntegr(object):
             
         return response
     
-    #TODO: This should belong different class        
+    #TODO: This should belong different class
+    # TODO: add allowed users list in config
+    # TODO: add weights to users
     def rotate_user(self, department_id):
         if not isinstance(department_id, int):
             raise AmoException("Department id should be an integer!", None) 
@@ -418,6 +420,41 @@ class AmoIntegr(object):
         
         return response
         
+    # Links 2 to 1
+    # Works with leads, contacts, companies, customers
+    # TODO: make it work with catalog elements
+    # TODO: test it
+    def add_link(self, entity1_type, entity1_id, entity2_type, entity2_id, 
+        **kwargs):
+        
+        entity_type_options = ["leads", "contacts", "companies", "customers"]
+            
+        if not entity1_type in entity_type_options:
+            message = "Unknown entity_type <%s>" % entity1_type
+            raise AmoException(message, None) 
+            
+        if not entity2_type in entity_type_options:
+            message = "Unknown entity_type <%s>" % entity2_type
+            raise AmoException(message, None) 
+            
+        params_to_pass = {
+            "from" : entity1_type,
+            "from_id" : entity1_id,
+            "to" : entity2_type,
+            "to_id" : entity2_id
+        }
+                
+        json_to_pass = {
+            "request" : {
+                "links" : {
+                    "link" : [params_to_pass]
+                }
+            }
+        }
+        
+        # print(json.dumps(json_to_pass, ensure_ascii=False))
+        return self.call("links/set", json_to_pass)
+        
     # First entity will have priority. Waiting for lists of custom fields
     def unite_entities(self, entity_type, first_entity, second_entity):
         if not entity_type in entity_optional_params:
@@ -466,8 +503,9 @@ class AmoIntegr(object):
         return united_entity
         
     # TODO: test this function. Check work with LISTS!!!
-    def find_duplicates(self, entity, entity_type, fields_to_find_duplicates):
-        
+    def find_duplicates(self, entity, entity_type, fields_to_find_duplicates, 
+        **kwargs):
+
         if not entity_type in entity_optional_params:
             message = "Unknown entity type <%s>" % entity_type
             raise AmoException(message, None)
@@ -496,11 +534,26 @@ class AmoIntegr(object):
                         if enum_name in entity[field]:
                             duplicates += self.get_entity("contacts", 
                                 query=entity[field][enum_name])["contacts"]
-                    
+                                
+        if "additional_data_to_query" in kwargs:
+            if entity_type in kwargs["additional_data_to_query"]:
+                duplicates += self.find_duplicates(
+                    kwargs["additional_data_to_query"][entity_type], entity_type, 
+                    fields_to_find_duplicates)
+                                
         return duplicates
     
-    # TODO: complete this function    
-    def send_order_data(self, lead_data={}, contact_data={}, company_data={}, tags={}):
+    # TODO: complete this function  
+    ###
+    # Entity data = {tags=..., custom_fields=..., name=...}
+    # responsible_user_id or department_id needed
+    # additional_data_to_query = {entity_type = some_new_custom_fields}
+    # pipelines = {pipline_for_new = ... , status_for_new = ... , 
+    #   pipeline_for_rec = ... , status_for_rec = ...}
+    ###
+    def send_order_data(self, lead_data={}, contact_data={}, company_data={}, 
+        tags={}, **kwargs):
+            
         if not lead_data and not contact_data and not company_data:
             raise AmoException("Please send some data!", None)
         
@@ -509,18 +562,70 @@ class AmoIntegr(object):
         company_duplicates = []
         if "fields-to-check-dups" in self.cfg:
             if contact_data and "contacts" in self.cfg["fields-to-check-dups"]:
-                contact_duplicates += self.find_duplicates(contact_data, "contacts",
-                    self.cfg["fields-to-check-dups"]["contacts"])
+                contact_duplicates += self.find_duplicates(contact_data["custom_fields"], 
+                    "contacts", self.cfg["fields-to-check-dups"]["contacts"], **kwargs)
             
             if company_data and "companies" in self.cfg["fields-to-check-dups"]:
-                contact_duplicates += self.find_duplicates(contact_data, "companies",
-                    self.cfg["fields-to-check-dups"]["companies"])
+                contact_duplicates += self.find_duplicates(contact_data["custom_fields"], 
+                    "companies", self.cfg["fields-to-check-dups"]["companies"], **kwargs)
                     
                     
-        pprint(contact_duplicates)
+        if "responsible_user_id" in kwargs:
+                responsible_user_id = kwargs["responsible_user_id"]
+        elif "department_id" in kwargs:
+            responsible_user_id = self.rotate_user(kwargs["department_id"])
+        else:
+            raise AmoException("responsible_user_id or department_id needed!", None)
                     
         if not contact_duplicates and not company_duplicates:
-            some=1
+            if company_data:
+                company_id = self.add_entity(
+                    entity_type = "companies", 
+                    name = company_data["name"], 
+                    responsible_user_id = responsible_user_id, 
+                    custom_fields = company_data["custom_fields"],
+                    tags = company_data["tags"]
+                )["companies"]["add"][0]["id"]
+            
+            if lead_data:
+                internal_kwargs = {
+                    tags : lead_data["tags"]
+                }
+                if company_data:
+                    internal_kwargs["linked_company_id"] = company_id
+                if "pipelines" in kwargs:
+                    internal_kwargs["pipeline_id"] = kwargs["pipline_for_new"]
+                    internal_kwargs["status_id"] = kwargs["status_for_new"]
+                    
+                    
+                lead_id = self.add_entity(
+                    entity_type = "leads", 
+                    name = lead_data["name"], 
+                    responsible_user_id = responsible_user_id, 
+                    custom_fields = lead_data["custom_fields"],
+                    **internal_kwargs
+                )["leads"]["add"][0]["id"]
+            
+            if contact_data:
+                internal_kwargs = {
+                    tags : contact_data["tags"]
+                }
+                if lead_data:
+                    internal_kwargs["linked_leads_id"] = [lead_id]
+                
+                contact_id = self.add_entity(
+                    entity_type = "contacts", 
+                    name = contact_data["name"], 
+                    responsible_user_id = responsible_user_id, 
+                    custom_fields = contact_data["custom_fields"],
+                    **internal_kwargs
+                )["contacts"]["add"][0]["id"]
+                
+            if contact_data and company_data:
+                # Here we should connect them
+                self.add_link("contacts", contact_id, "companies", company_id)
+                
+            
         elif not contact_duplicates:
             some=1
         elif not company_duplicates:
