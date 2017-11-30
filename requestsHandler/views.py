@@ -31,15 +31,23 @@ def basicHandler(request):
     api = AmoIntegr(user_cfg)
     
     contact_data = {
-        "Поле 5" : 911,
-        "Должность" : "Some",
-        "Телефон" : {"WORK" : "2148354", "MOB" : "098"},
-        "Тип" : ["вар1"],
-        "Email" : {"WORK" : "email-mail"}
+        "name" : "Тест",
+        "custom_fields" : {
+            "Поле 5" : 911,
+            "Должность" : "Some",
+            "Телефон" : {"WORK" : "0000"},
+            "Тип" : ["вар1"],
+            "Email" : {"WORK" : "email-mail"}
+        },
+        "tags" : "Тег3"
     }
         
     lead_data = {
-        "что-то" : 1000000
+        "name" : "Тестик",
+        "custom_fields" : {
+            "что-то" : 1000000
+        },
+        "tags" : "Тег3, Тег4"
     }
     
     additional_data_to_query = {
@@ -48,8 +56,11 @@ def basicHandler(request):
         }
     }
     
-    # api.send_order_data(contact_data = contact_data, additional_data_to_query = 
-    #     additional_data_to_query)
+    # pprint(api.get_links("contacts", 27405655))
+    # pprint(api.get_customers(id=54943))
+        
+    api.send_order_data(contact_data = contact_data, lead_data=lead_data, 
+        responsible_user_id=845532)
     
     # client = DjangoDaDataClient()
     
