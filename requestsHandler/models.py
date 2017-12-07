@@ -5,6 +5,8 @@ from django.contrib.auth.models import User
 import hashlib
 import time
 
+import json
+
 def _createHash():
     """This function generate 10 character long hash"""
     hash = hashlib.sha1()
@@ -28,4 +30,3 @@ class UserConfig(models.Model):
     cache = JSONField(default={}, blank=True)
     fields_cache = JSONField(default={}, blank=True)
     last_user_cache = JSONField(default={}, blank=True)
-    

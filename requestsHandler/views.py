@@ -36,8 +36,8 @@ def basicHandler(request):
             "Поле 5" : 911,
             "Должность" : "Some",
             "Телефон" : {"WORK" : "0000"},
-            "Тип" : ["вар1"],
-            "Email" : {"WORK" : "email-mail"}
+            "Тип" : ["вар6"],
+            "Email" : [{"WORK" : "email-mail"}, {"WORK" : "email-2mail"}]
         },
         "tags" : "Тег3"
     }
@@ -52,15 +52,13 @@ def basicHandler(request):
     
     additional_data_to_query = {
         "contacts" : {
-            "Телефон" : {"WORK" : "123123"}
+            "Тип" : ["Вар4", "Вар3"]
         }
     }
     
-    # pprint(api.get_links("contacts", 27405655))
-    # pprint(api.get_customers(id=54943))
-        
-    api.send_order_data(contact_data = contact_data, lead_data=lead_data, 
-        responsible_user_id=845532)
+      
+    api.send_order_data(contact_data = contact_data, lead_data=lead_data, department_id=53910,
+        additional_data_to_query=additional_data_to_query)
     
     # client = DjangoDaDataClient()
     

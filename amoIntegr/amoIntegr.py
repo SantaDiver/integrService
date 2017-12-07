@@ -92,7 +92,7 @@ class AmoIntegr(object):
         elif time.time() - cache["timestamp"] > int(self.cfg["cache-ttl"]):
             self.force_to_update_cache()
             self.cache_fields()
-            
+    
     def translate_fields(self, fields, type_of_element):
         self.update_cache()
         fields_cache = self.user.fields_cache
@@ -109,14 +109,14 @@ class AmoIntegr(object):
             }
 
             if field_from_cache["multiple"] == "Y":
-                
-                for (enum, subvalue) in value.items():
-                    enum_dict = dict((v,k) 
-                        for (k,v) in field_from_cache["enums"].items())
-                    translated_field["values"].append({
-                        "value" : subvalue,
-                        "enum" : enum_dict[enum]
-                    })
+                if not type(value) is list:
+                    value = [value,]
+                for single_value in value:
+                    for (enum, subvalue) in single_value.items():
+                        translated_field["values"].append({
+                            "value" : subvalue,
+                            "enum" : enum
+                        })
             
             else:
                 if type(value) is list:
@@ -319,6 +319,8 @@ class AmoIntegr(object):
             users_cache["-1"] = next_user_id
         
         self.user.last_user_cache = users_cache
+        
+        return users_cache[str(department_id)]
     
     # Elemnt type 1 - contact, 2 - lead, 3 - company
     def add_task(self, element_id, element_type, task_type, text, complete_till,
@@ -539,7 +541,6 @@ class AmoIntegr(object):
                 
         return united_entity
         
-    # TODO: test this function. Check work with LISTS!!!
     def find_duplicates(self, entity, entity_type, fields_to_find_duplicates, 
         **kwargs):
 
@@ -556,21 +557,26 @@ class AmoIntegr(object):
                 message = "Field <%s> is incorrect" % field
                 raise AmoException(message, None)
             if field in entity:
+                if not type(entity[field]) is list:
+                    entity[field] = [entity[field],]
+                
                 if fields_cache[field]["multiple"] == "N":
-                    duplicates += self.get_entity("contacts", 
-                        query=entity[field])["contacts"]
+                    for entity_field in entity[field]:
+                        duplicates += self.get_entity(entity_type, 
+                            query=entity_field)[entity_type]
                         
                 elif fields_cache[field]["multiple"] == "Y":
-                    for enum in fields_cache[field]["enums"]:
-                        enum_name = fields_cache[field]["enums"][enum]
-                        
-                        if enum in entity[field]:
-                            duplicates += self.get_entity("contacts", 
-                                query=entity[field][enum])["contacts"]
-                        
-                        if enum_name in entity[field]:
-                            duplicates += self.get_entity("contacts", 
-                                query=entity[field][enum_name])["contacts"]
+                    for entity_field in entity[field]:
+                        for enum in fields_cache[field]["enums"]:
+                            enum_name = fields_cache[field]["enums"][enum]
+                            
+                            if enum in entity_field:
+                                duplicates += self.get_entity(entity_type, 
+                                    query=entity_field[enum])[entity_type]
+                            
+                            if enum_name in entity_field:
+                                duplicates += self.get_entity(entity_type, 
+                                    query=entity_field[enum_name])[entity_type]
                                 
         if "additional_data_to_query" in kwargs:
             if entity_type in kwargs["additional_data_to_query"]:
@@ -628,7 +634,7 @@ class AmoIntegr(object):
     #   pipeline_for_rec = ... , status_for_rec = ...}
     ###
     def send_order_data(self, lead_data={}, contact_data={}, company_data={}, 
-        generate_tasks_for_rec=False, **kwargs):
+        generate_tasks_for_rec=False, department_id=-1, **kwargs):
             
         if not lead_data and not contact_data and not company_data:
             raise AmoException("Please send some data!", None)
@@ -648,14 +654,11 @@ class AmoIntegr(object):
             if company_data and "companies" in self.cfg["fields-to-check-dups"]:
                 contact_duplicates += self.find_duplicates(contact_data["custom_fields"], 
                     "companies", self.cfg["fields-to-check-dups"]["companies"], **kwargs)
-                    
-                    
+        
         if "responsible_user_id" in kwargs:
-                responsible_user_id = kwargs["responsible_user_id"]
-        elif "department_id" in kwargs:
-            responsible_user_id = self.rotate_user(kwargs["department_id"])
+            responsible_user_id = kwargs["responsible_user_id"]
         else:
-            raise AmoException("responsible_user_id or department_id needed!", None)
+            responsible_user_id = self.rotate_user(department_id)
                     
         if not contact_duplicates and not company_duplicates:
             if company_data:
@@ -706,7 +709,7 @@ class AmoIntegr(object):
                 
         # TODO: Add message if duplicates > 1
         # TODO: Add lost update difference (contact/company and lead)
-        elif not company_duplicates:
+        elif contact_duplicates:
             united_data = self.unite_entities(
                 "contacts", 
                 contact_duplicates[0]["custom_fields"],
@@ -774,7 +777,7 @@ class AmoIntegr(object):
                         text = self.cfg["rec-lead-task-text"],
                         complete_till = time.time() + self.cfg["time-to-complete-rec-task"]
                     )
-                if not_closed_customers:
+                elif not_closed_customers:
                     self.add_task(
                         element_id = contact_id, 
                         element_type = "contacts", 
@@ -783,7 +786,7 @@ class AmoIntegr(object):
                         complete_till = time.time() + self.cfg["time-to-complete-rec-task"]
                     )
 
-        elif not contact_duplicates:
+        elif company_duplicates:
             united_data = self.unite_entities(
                 "companies", 
                 company_duplicates[0]["custom_fields"],
@@ -852,7 +855,7 @@ class AmoIntegr(object):
                         text = self.cfg["rec-lead-task-text"],
                         complete_till = time.time() + self.cfg["time-to-complete-rec-task"]
                     )
-                if not_closed_customers:
+                elif not_closed_customers:
                     self.add_task(
                         element_id = company_id, 
                         element_type = "companies", 
@@ -862,7 +865,7 @@ class AmoIntegr(object):
                     )
             
         else:
-            print("4444444444444444444444444444444444444")
+            pass
                     
                     
 
