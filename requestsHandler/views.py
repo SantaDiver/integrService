@@ -33,11 +33,11 @@ def basicHandler(request):
     contact_data = {
         "name" : "Тест",
         "custom_fields" : {
-            "Поле 5" : 911,
             "Должность" : "Some",
             "Телефон" : {"WORK" : "0000"},
             "Тип" : ["вар6"],
-            "Email" : [{"WORK" : "email-mail"}, {"WORK" : "email-2mail"}]
+            "Email" : [{"WORK" : "email-mail"}, {"WORK" : "email-2mail"}],
+            # "Адрес" : {"city" : "Хуерод", "country" : "RU"}
         },
         "tags" : "Тег3"
     }
@@ -50,15 +50,25 @@ def basicHandler(request):
         "tags" : "Тег3, Тег4"
     }
     
+    company_data = {
+        "name" : "Тест",
+        "custom_fields" : {
+            "Телефон" : {"WORK" : "0000"},
+            "Где ведут учет" : "CRM"
+        },
+        "tags" : "Тег3"
+    }
+    
     additional_data_to_query = {
         "contacts" : {
             "Тип" : ["Вар4", "Вар3"]
         }
     }
     
-      
-    api.send_order_data(contact_data = contact_data, lead_data=lead_data, department_id=53910,
-        additional_data_to_query=additional_data_to_query)
+    pprint(api.get_entity("contacts"))
+        
+    # api.send_order_data(contact_data = contact_data, lead_data=lead_data, department_id=53910,
+    #     additional_data_to_query=additional_data_to_query)
     
     # client = DjangoDaDataClient()
     

@@ -14,7 +14,7 @@ def _createHash():
     return  hash.hexdigest()
     
 def get_default_user():
-    return User.objects.get_or_create(id=1)
+    return User.objects.get(id=1)
 
 # Create your models here.
 

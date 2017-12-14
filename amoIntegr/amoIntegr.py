@@ -1,4 +1,5 @@
 # TODO: add functiond for getting/adding/updateing with useful names
+# TODO: change with new API
 
 import json
 import requests
@@ -7,8 +8,9 @@ from pprint import pprint
 import os.path
 import sys
 
-from utils import get_method_by_request
 from utils import entity_optional_params
+from utils import update_optional_params
+from utils import get_optional_params
 
 from amoException import AmoException
 
@@ -33,18 +35,20 @@ class AmoIntegr(object):
             raise AmoException("Auth Failed", response)
             
             
-    def call(self, request, params = []):
-        url = "https://%s.amocrm.ru/private/api/v2/json/%s" % (
+    def call(self, request, request_method, params={}):
+        url = "https://%s.amocrm.ru/%s" % (
                 self.cfg["subdomain"], request)
 
-        if get_method_by_request(request) == "GET":
+        if request_method == "GET":
             response = self.request.get(url, params = params)
-        else:
+        elif request_method == "POST":
             response = self.request.post(url, json = params)
+        else:
+            raise AmoException("Unknown request method %s" % request_method, None)
             
         if (response.status_code == 401):
             self._auth()
-            if get_method_by_request(request) == "GET":
+            if request_method == "GET":
                 response = self.request.get(url, params = params)
             else:
                 response = self.request.post(url, json = params)
@@ -58,29 +62,35 @@ class AmoIntegr(object):
         if (response.status_code == 204 and response.reason=="No Content"):
             return {}
             
-        return response.json()["response"]
+        return response.json()
         
     def cache_special_type_fields(self, type_of_element, cache):
         result_cache = {}
-        for field in cache["account"]["custom_fields"][type_of_element]:
-            if field["code"]:
-                result_cache[field["code"]] = field
+        if not cache["_embedded"]["custom_fields"][type_of_element]:
+            return {}
+            
+        for field_id, field in cache["_embedded"]["custom_fields"][type_of_element].items():
             result_cache[field["name"]] = field
-            result_cache[field["id"]] = field
+            result_cache[field_id] = field
             
         return result_cache
-            
+    
+    # Doesn't work with catalog elemtns
     def cache_fields(self):
         cache = self.user.cache
         fields_cache = {}
-        type_of_elements = ["contacts", "leads"]
+        type_of_elements = ["contacts", "leads", "companies", "customers"]
+            
         for type_of_element in type_of_elements:
-            fields_cache[type_of_element] = self.cache_special_type_fields(type_of_element, cache)
+            fields_cache[type_of_element] = self.cache_special_type_fields(
+                type_of_element, cache)
         
         self.user.fields_cache = fields_cache
     
     def force_to_update_cache(self):
-        resp = self.call('accounts/current')
+        resp = self.call("api/v2/account", "GET", {
+            "with" : "custom_fields,users,pipelines,groups,note_types,task_types"
+        })
         resp["timestamp"] = time.time()
         self.user.cache = resp
                 
@@ -99,7 +109,8 @@ class AmoIntegr(object):
         translated_fields = []
         for (name, value) in fields.items():
             if not value:
-                raise AmoException("Empty field value!", None)
+                continue
+                # raise AmoException("Empty field value!", None)
             
             field_from_cache = fields_cache[type_of_element][name]
            
@@ -108,7 +119,7 @@ class AmoIntegr(object):
                 "values" : []
             }
 
-            if field_from_cache["multiple"] == "Y":
+            if field_from_cache["is_multiple"]:
                 if not type(value) is list:
                     value = [value,]
                 for single_value in value:
@@ -118,6 +129,15 @@ class AmoIntegr(object):
                             "enum" : enum
                         })
             
+            # TODO: сделать, чтобы работало с Адресами
+            # Тут костыль
+            # elif "адрес" in name.lower():
+            #     for (subtype, subvalue) in value.items():
+            #         translated_field["values"].append({
+            #             "subtype" : subtype,
+            #             "value" : subvalue
+            #         })
+                
             else:
                 if type(value) is list:
                     enum_dict = dict((v,k) 
@@ -138,7 +158,7 @@ class AmoIntegr(object):
     
     # Works with contacts, leads, companies, customers. Doesn't work with tasks!
     def add_entity(self, entity_type, name, responsible_user_id, custom_fields, 
-        translate = True, **kwargs):
+        translate = True, call=True, **kwargs):
             
         if not entity_type in entity_optional_params:
             message = "Unknown entity type <%s>" % entity_type
@@ -146,8 +166,6 @@ class AmoIntegr(object):
         
         self.update_cache()    
         cache = self.user.cache
-        if entity_type == "customers" and cache["account"]["customers_enabled"] != "Y":
-                raise AmoException("Customers are not enabled!", None)
         
         if translate:
             translated_fields = self.translate_fields(custom_fields, entity_type)
@@ -159,16 +177,17 @@ class AmoIntegr(object):
                 "name" : name,
                 "responsible_user_id" : responsible_user_id,
                 "custom_fields" : translated_fields,
-                "created_user_id" : 0,
             }
         else:
             params_to_pass = {
                 "name" : name,
                 "main_user_id" : responsible_user_id,
                 "custom_fields" : translated_fields,
-                "created_by" : 0,
             }
         
+        if entity_type in ["contacts", "companies"]:
+            params_to_pass["created_by"] = 0
+            
         for (key, value) in kwargs.items():
             if key in entity_optional_params[entity_type]:
                 params_to_pass[key] = value
@@ -176,23 +195,18 @@ class AmoIntegr(object):
                 message = "Param <%s> is incorrect" % key
                 raise AmoException(message, None)
         
-        json_to_pass = {
-            "request" : {
-                entity_type : {
-                    "add" : [params_to_pass]
-                }
-            }
-        }
+        if not call:
+            return params_to_pass
         
-        if entity_type == "companies":
-            entity_type = "company"
-        # print(json.dumps(json_to_pass, ensure_ascii=False))
-        return self.call("%s/set" % entity_type, json_to_pass)
+        json_to_pass = {
+            "add" : [params_to_pass]
+        }
+
+        return self.call("api/v2/%s" % entity_type, "POST", json_to_pass)
     
     # Works with contacts, leads, companies, customers. Doesn't work with tasks!
-    # Supports translate=BOOLEAN
-    def update_entity(self, entity_type, entity_id, last_modified, translate=True,
-        **kwargs):
+    def update_entity(self, entity_type, entity_id, translate=True, call=True, 
+        updated_at=time.time(), **kwargs):
             
         if not entity_type in entity_optional_params:
             message = "Unknown entity type <%s>" % entity_type
@@ -201,12 +215,9 @@ class AmoIntegr(object):
         self.update_cache()    
         cache = self.user.cache
         
-        if entity_type == "customers" and cache["account"]["customers_enabled"] != "Y":
-                raise AmoException("Customers are not enabled!", None)
-        
         params_to_pass = {
             "id" : entity_id,
-            "last_modified" : last_modified
+            "updated_at" : updated_at
         }
         
         if "custom_fields" in kwargs:
@@ -215,61 +226,42 @@ class AmoIntegr(object):
                     kwargs["custom_fields"], entity_type)
             else:
                 params_to_pass["custom_fields"] = kwargs["custom_fields"]
-                
-        if entity_type != "customers":
-            mutual_params = ["name", "responsible_user_id", "created_user_id"]
-        else:
-            mutual_params = ["name", "main_user_id", "created_by"]
         
         for (key, value) in kwargs.items():
-            if key in entity_optional_params[entity_type] or key in mutual_params:
+            if key in entity_optional_params[entity_type] or key in update_optional_params[entity_type]:
                 params_to_pass[key] = value
             elif not key in ["custom_fields"]:
                 message = "Param <%s> is incorrect" % key
                 raise AmoException(message, None)
         
-        json_to_pass = {
-            "request" : {
-                entity_type : {
-                    "update" : [params_to_pass]
-                }
-            }
-        }
+        if not call:
+            return params_to_pass
         
-        if entity_type == "companies":
-            entity_type = "company"
+        json_to_pass = {
+            "update" : [params_to_pass]
+        }
 
-        return self.call("%s/set" % entity_type, json_to_pass)
+        return self.call("api/v2/%s" % entity_type, "POST", json_to_pass)
     
     # Works with contacts, leads, companies, tasks. Doesn't work with customers!
     def get_entity(self, entity_type, **kwargs):
-        if not entity_type in entity_optional_params and entity_type != "tasks":
+        if not entity_type in get_optional_params and entity_type != "tasks":
             message = "Unknown entity type <%s>" % entity_type
             raise AmoException(message, None)
         
         if entity_type == "customers":
             raise AmoException("Get entity doesn't work with customers!", None)
             
-        optional_params = ["if-modified-since", "limit_rows", "limit_offset",
-            "id", "query", "responsible_user_id", "type", "status", "element_id", "id[]"]
-            
         params_to_pass = {}
         
         for (key, value) in kwargs.items():
-            if key in optional_params:
+            if key in get_optional_params[entity_type]:
                 params_to_pass[key] = value
             else:
                 message = "Param <%s> is incorrect" % key
                 raise AmoException(message, None)
                 
-        if entity_type == "companies":
-            entity_type = "company"
-        response = self.call("%s/list" % entity_type, params_to_pass)
-        
-        if response == {}:
-            if entity_type == "company":
-                entity_type = "contacts"
-            response[entity_type] = []
+        response = self.call("api/v2/%s" % entity_type, "GET", params_to_pass)
             
         return response
     
@@ -655,7 +647,12 @@ class AmoIntegr(object):
                 contact_duplicates += self.find_duplicates(contact_data["custom_fields"], 
                     "companies", self.cfg["fields-to-check-dups"]["companies"], **kwargs)
         
-        if "responsible_user_id" in kwargs:
+        # TODO: add finding duplicates with different responsible user
+        if contact_duplicates:
+            responsible_user_id = contact_duplicates[0]["responsible_user_id"]
+        elif company_duplicates:
+            responsible_user_id = company_duplicates[0]["responsible_user_id"]
+        elif "responsible_user_id" in kwargs:
             responsible_user_id = kwargs["responsible_user_id"]
         else:
             responsible_user_id = self.rotate_user(department_id)

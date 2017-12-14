@@ -9,6 +9,9 @@ from prettyjson import PrettyJSONWidget
 # Register your models here.
 
 from jsoneditor.forms import JSONEditor
+
+# admin.site.register(UserConfig)
+
 @admin.register(UserConfig)
 class MyAdmin(admin.ModelAdmin):
     list_display = ("get_username", "get_email")
