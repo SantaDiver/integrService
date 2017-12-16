@@ -5,14 +5,15 @@ entity_optional_params = {
         "sale", "contacts_id", "company_id"],
     "companies" : ["tags", "created_at", "updated_at", "created_by", "leads_id",
         "customers_id", "contacts_id"],
-    "customers" : ["tags", ]
+    "customers" : ["tags", "next_date", "created_at", "updated_at", "created_by",
+        "next_price", "periodicity", "period_id", "contacts_id", "company_id",]
 }
 
 update_optional_params = {
     "contacts" : ["name", "unlink", "responsible_user_id"],
     "leads" : ["name", "unlink", "responsible_user_id"],
     "companies" : ["name", "unlink", "responsible_user_id"],
-    "customers" : ["name", ]
+    "customers" : ["name", "unlink", "responsible_user_id"]
 }
 
 get_optional_params = {
@@ -20,7 +21,8 @@ get_optional_params = {
         "responsible_user_id", "query"],
     "leads" : ["id[]", "limit_rows", "limit_offset", "id", "query", 
         "responsible_user_id", "status"],
-    "companies" : ["id[]"],
-    "customers" : ["id[]"],
-    "tasks" : ["id[]"]
+    "companies" : ["id[]", "limit_rows", "limit_offset", "id", "query", 
+        "responsible_user_id"],
+    "tasks" : ["id[]", "id", "limit_rows", "limit_offset", "element_id", 
+        "responsible_user_id", "type"]
 }
