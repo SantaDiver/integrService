@@ -103,7 +103,7 @@ class AmoIntegr(object):
         if not "timestamp" in cache:
             self.force_to_update_cache()
             self.cache_fields()
-        elif time.time() - cache["timestamp"] > int(self.cfg["cache-ttl"]):
+        elif time.time() - cache["timestamp"] > int(self.cfg["cache_ttl"]):
             self.force_to_update_cache()
             self.cache_fields()
     
@@ -596,21 +596,21 @@ class AmoIntegr(object):
         if not lead_data and not contact_data and not company_data:
             raise AmoException("Please send some data!", None)
             
-        if generate_tasks_for_rec and (not "rec-lead-task-text" in self.cfg or
-            not "time-to-complete-rec-task" in self.cfg):
+        if generate_tasks_for_rec and (not "rec_lead_task_text" in self.cfg or
+            not "time_to_complete_rec_task" in self.cfg):
             raise AmoException("CFG params are needed to generate rec tasks!", None)
         
         self.update_cache()            
         contact_duplicates = []
         company_duplicates = []
-        if "fields-to-check-dups" in self.cfg:
-            if contact_data and "contacts" in self.cfg["fields-to-check-dups"]:
+        if "fields_to_check_dups" in self.cfg:
+            if contact_data and "contacts" in self.cfg["fields_to_check_dups"]:
                 contact_duplicates += self.find_duplicates(contact_data["custom_fields"], 
-                    "contacts", self.cfg["fields-to-check-dups"]["contacts"], **kwargs)
+                    "contacts", self.cfg["fields_to_check_dups"]["contacts"], **kwargs)
             
-            if company_data and "companies" in self.cfg["fields-to-check-dups"]:
+            if company_data and "companies" in self.cfg["fields_to_check_dups"]:
                 company_duplicates += self.find_duplicates(company_data["custom_fields"], 
-                    "companies", self.cfg["fields-to-check-dups"]["companies"], **kwargs)
+                    "companies", self.cfg["fields_to_check_dups"]["companies"], **kwargs)
         
         if contact_duplicates:
             responsible_user_id = contact_duplicates[0]["responsible_user_id"]
@@ -746,8 +746,8 @@ class AmoIntegr(object):
                     element_type = element_type,
                     task_type = "Звонок",
                     responsible_user_id = not_closed_customers[0]["responsible_user_id"],
-                    text = self.cfg["rec-lead-task-text"],
-                    complete_till_at = time.time()+self.cfg["time-to-complete-rec-task"]
+                    text = self.cfg["rec_lead_task_text"],
+                    complete_till_at = time.time()+self.cfg["time_to_complete_rec_task"]
                 )
             
                 lead_id = element_id

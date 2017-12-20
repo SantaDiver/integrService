@@ -3,5 +3,7 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
-    url(r'^$', views.basicHandler, name='basicHandler'),
+    url(r'siteHandler$', views.siteHandler, name='siteHandler'),
+    url(r'cacheUpdate$', views.cacheUpdate, name='cacheUpdate'),
+    url(r'configurator$', views.configurator, name='configurator'),
 ]
