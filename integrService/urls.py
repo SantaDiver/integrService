@@ -16,7 +16,14 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 
+from requestsHandler import views as requestsHandler_views
+
 urlpatterns = [
+    url(r'^$', requestsHandler_views.configurator, name='configurator'),
     url(r'^admin/', admin.site.urls),
     url(r'^requestsHandler/', include('requestsHandler.urls')),
+    url(r'siteHandler$', requestsHandler_views.siteHandler, name='siteHandler'),
+    url(r'cacheUpdate$', requestsHandler_views.cacheUpdate, name='cacheUpdate'),
+    url(r'setConfig', requestsHandler_views.setConfig, name='setConfig'),
+    url(r'getSchema', requestsHandler_views.getSchema, name='getSchema'),
 ]

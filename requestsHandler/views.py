@@ -5,6 +5,7 @@ from pprint import pprint
 import time
 
 from django.shortcuts import render
+from django.shortcuts import redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -86,5 +87,26 @@ def configurator(request):
         "contacts" : contact_field_options,
     }
     
+    return render(request, 'requestsHandler/configurator.html')
+
+def setConfig(request):
+    if request.method != 'POST':
+        return HttpResponse("Waiting for POST request")
+        
+    pprint(request.POST)
+
+    user_cfg = get_object_or_404(UserConfig, public_hash=1)
     
-    return render(request, 'requestsHandler/configurator.html', config)
+    config = user_cfg
+    
+    user_cfg.save()
+    
+    # return redirect('configurator')
+    return HttpResponse("OK!")
+    
+def getSchema(request):
+    user_cfg = get_object_or_404(UserConfig, public_hash=1)
+    config = user_cfg.config
+    
+    schema = config
+    return HttpResponse(json.dumps(schema, sort_keys=True, ensure_ascii=False))
