@@ -26,3 +26,9 @@ get_optional_params = {
     "tasks" : ["id[]", "id", "limit_rows", "limit_offset", "element_id", 
         "responsible_user_id", "type"]
 }
+
+one_by_one = "По очереди"
+zero_department = "Отдел продаж"
+not_chosen = "Не выбрано"
+ening_statuses = [142, 143]
+succes_status = 142

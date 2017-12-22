@@ -15,6 +15,8 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.contrib.auth.views import logout
+from django.conf import settings
 
 from requestsHandler import views as requestsHandler_views
 
@@ -23,7 +25,8 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^requestsHandler/', include('requestsHandler.urls')),
     url(r'siteHandler$', requestsHandler_views.siteHandler, name='siteHandler'),
-    url(r'cacheUpdate$', requestsHandler_views.cacheUpdate, name='cacheUpdate'),
     url(r'setConfig', requestsHandler_views.setConfig, name='setConfig'),
-    url(r'getSchema', requestsHandler_views.getSchema, name='getSchema'),
+    url(r'getConfig', requestsHandler_views.getConfig, name='getConfig'),
+    url(r'login', requestsHandler_views.login_user, name='login'),
+    url(r'logout', logout, {'next_page': settings.LOGOUT_REDIRECT_URL}, name='logout'),
 ]

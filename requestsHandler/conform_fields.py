@@ -1,4 +1,5 @@
 from dadata.plugins.django import DjangoDaDataClient
+from utils import one_by_one, not_chosen
 
 def conform_fields(conformity, data):
     data_to_send = {
@@ -36,13 +37,13 @@ def conform_fields(conformity, data):
         generate_tasks_for_rec = conformity["generate_tasks_for_rec"]
     
     department_id = -1
-    if "department_id" in conformity:
+    if "department_id" in conformity and conformity["department_id"] != not_chosen:
         department_id = conformity["department_id"]
         
     internal_kwargs = {"additional_data_to_query" : {}}
     if "pipelines" in conformity:
         internal_kwargs["pipelines"] = conformity["pipelines"]
-    if "responsible_user_id" in conformity:
+    if "responsible_user_id" in conformity and conformity["responsible_user_id"] != one_by_one:
         internal_kwargs["responsible_user_id"] = conformity["responsible_user_id"]
     if "tag_for_rec" in conformity:
         internal_kwargs["tag_for_rec"] = conformity["tag_for_rec"]
@@ -68,3 +69,9 @@ def conform_fields(conformity, data):
                         })
                         
     return (data_to_send, generate_tasks_for_rec, department_id, internal_kwargs)
+    
+def find_pipline_id(pipelines, name):
+    for pipeline_id, pipeline in pipelines.items():
+        for status_id, status in pipeline["statuses"].items():
+            if pipeline["name"] == name.split("/")[0] and status["name"] == name.split("/")[1]:
+                return status_id

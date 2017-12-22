@@ -11,6 +11,7 @@ import sys
 from utils import entity_optional_params
 from utils import update_optional_params
 from utils import get_optional_params
+from utils import succes_status
 
 from amoException import AmoException
 
@@ -569,7 +570,7 @@ class AmoIntegr(object):
         # Magic: 142 is Succes status in ANY pipline in ANY account
         # https://www.youtube.com/watch?v=DCsMXYgLXqs
         reccurent = [lead for lead in leads 
-            if lead["status_id"] == 142 and not lead["is_deleted"]]
+            if lead["status_id"] == succes_status and not lead["is_deleted"]]
         
         return reccurent
     
