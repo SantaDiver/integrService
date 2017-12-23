@@ -41,12 +41,14 @@ def conform_fields(conformity, data):
         department_id = conformity["department_id"]
         
     internal_kwargs = {"additional_data_to_query" : {}}
-    if "pipelines" in conformity:
-        internal_kwargs["pipelines"] = conformity["pipelines"]
     if "responsible_user_id" in conformity and conformity["responsible_user_id"] != one_by_one:
         internal_kwargs["responsible_user_id"] = conformity["responsible_user_id"]
-    if "tag_for_rec" in conformity:
-        internal_kwargs["tag_for_rec"] = conformity["tag_for_rec"]
+        
+    additional_params = ["pipelines", "tag_for_rec", "time_to_complete_rec_task",
+        "rec_lead_task_text", "fields_to_check_dups"]
+    for param in additional_params:
+       if param in conformity: 
+           internal_kwargs[param] = conformity[param]
         
     if "dadata_phone_check" in conformity and conformity["dadata_phone_check"]:
         client = DjangoDaDataClient()

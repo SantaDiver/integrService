@@ -21,7 +21,6 @@ from django.conf import settings
 from requestsHandler import views as requestsHandler_views
 
 urlpatterns = [
-    url(r'^$', requestsHandler_views.configurator, name='configurator'),
     url(r'^admin/', admin.site.urls),
     url(r'^requestsHandler/', include('requestsHandler.urls')),
     url(r'siteHandler$', requestsHandler_views.siteHandler, name='siteHandler'),
@@ -29,4 +28,6 @@ urlpatterns = [
     url(r'getConfig', requestsHandler_views.getConfig, name='getConfig'),
     url(r'login', requestsHandler_views.login_user, name='login'),
     url(r'logout', logout, {'next_page': settings.LOGOUT_REDIRECT_URL}, name='logout'),
+    url(r'newForm', requestsHandler_views.newForm, name='newForm'),
+    url(r'^\w*$', requestsHandler_views.configurator, name='configurator'),
 ]

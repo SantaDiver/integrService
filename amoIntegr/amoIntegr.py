@@ -589,6 +589,8 @@ class AmoIntegr(object):
     #   status_for_rec = ...
     #} 
     # tag_for_rec = str
+    # time_to_complete_rec_task
+    # rec_lead_task_text
     
     ###
     def send_order_data(self, lead_data={}, contact_data={}, company_data={}, 
@@ -597,14 +599,14 @@ class AmoIntegr(object):
         if not lead_data and not contact_data and not company_data:
             raise AmoException("Please send some data!", None)
             
-        if generate_tasks_for_rec and (not "rec_lead_task_text" in self.cfg or
-            not "time_to_complete_rec_task" in self.cfg):
+        if generate_tasks_for_rec and (not "rec_lead_task_text" in kwargs or
+            not "time_to_complete_rec_task" in kwargs):
             raise AmoException("CFG params are needed to generate rec tasks!", None)
         
         self.update_cache()            
         contact_duplicates = []
         company_duplicates = []
-        if "fields_to_check_dups" in self.cfg:
+        if "fields_to_check_dups" in kwargs:
             if contact_data and "contacts" in self.cfg["fields_to_check_dups"]:
                 contact_duplicates += self.find_duplicates(contact_data["custom_fields"], 
                     "contacts", self.cfg["fields_to_check_dups"]["contacts"], **kwargs)
@@ -734,7 +736,7 @@ class AmoIntegr(object):
                 )["_embedded"]["items"][0]["id"]
                     
             elif generate_tasks_for_rec:
-                # Already check cfg to contain these keys
+                # Already check kwargs to contain these keys
                 if not_closed_leads:
                     element_id = not_closed_leads[0]["id"]
                     element_type = "leads"
@@ -747,8 +749,8 @@ class AmoIntegr(object):
                     element_type = element_type,
                     task_type = "Звонок",
                     responsible_user_id = not_closed_customers[0]["responsible_user_id"],
-                    text = self.cfg["rec_lead_task_text"],
-                    complete_till_at = time.time()+self.cfg["time_to_complete_rec_task"]
+                    text = kwargs["rec_lead_task_text"],
+                    complete_till_at = time.time()+kwargs["time_to_complete_rec_task"]
                 )
             
                 lead_id = element_id
