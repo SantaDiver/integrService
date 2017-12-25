@@ -25,9 +25,8 @@ from amoException import AmoException
 from conform_fields import conform_fields, find_pipline_id
 from utils import one_by_one, zero_department, not_chosen, ening_statuses
     
-# TODO: Dadata city check
-# TODO: delete whitespace from tags
-# TODO: put everiything inside site_form_conformity
+# TODO: Dadata city, email check (get it outside the form)
+# TODO: Добавить: использовать чужую distribution_settings
 @csrf_exempt
 def siteHandler(request):
     if request.method != 'POST':
@@ -50,9 +49,10 @@ def siteHandler(request):
             
     reslut = api.send_order_data(
         contact_data = data_to_send["contact_data"], 
-        lead_data=data_to_send["lead_data"], 
-        company_data=data_to_send["company_data"], 
-        department_id=department_id, 
+        lead_data = data_to_send["lead_data"], 
+        company_data = data_to_send["company_data"], 
+        form = request.POST['form'],
+        department_id = department_id, 
         generate_tasks_for_rec = generate_tasks_for_rec,
         **internal_kwargs
     )    
@@ -131,6 +131,22 @@ def setConfig(request):
             got_config["tag_for_rec"]
             
     if "_embedded" in user_cfg.cache:
+        if "distribution_settings" in got_config:
+            for idx, distr_settings in enumerate(got_config['distribution_settings']):
+                distr_user_id = next((user_id for user_id, user in user_cfg.cache \
+                    ["_embedded"]["users"].items() if user['name'] == distr_settings['user']), None)
+                got_config['distribution_settings'][idx]['user'] = distr_user_id
+            
+            if not 'distribution_settings' in user_cfg.config[form]:
+                 user_cfg.config[form]['distribution_settings'] = \
+                    got_config['distribution_settings']
+            else:
+                pairs = zip(user_cfg.config[form]['distribution_settings'], \
+                    got_config['distribution_settings'])
+                if any(x != y for x, y in pairs):
+                    user_cfg.last_user_cache[form] = {}
+                user_cfg.config[form]['distribution_settings'] = got_config['distribution_settings']
+        
         if "responsible_user" in got_config:
             if got_config["responsible_user"] == one_by_one:
                 user_cfg.config[form]["responsible_user_id"] = one_by_one
@@ -210,6 +226,9 @@ def getConfig(request):
     config["allowed_fields"] = {}
     config["allowed_statuses"] = []
     if "_embedded" in user_cfg.cache and requested_form in config:
+        pprint(api.rotate_user(-1, None, distribution_settings=config[requested_form]['distribution_settings']))
+        user_cfg.save()
+        
         if not 'fields_to_check_dups' in config[requested_form]:
             config[requested_form]['fields_to_check_dups'] = {}
         
@@ -277,7 +296,13 @@ def getConfig(request):
                         if not int(status_id) in ening_statuses:
                             config["status_for_rec"] = pipeline["name"]+"/"+status["name"]
                         else:
-                            config["status_for_rec"] = status["name"]  
+                            config["status_for_rec"] = status["name"]
+                            
+        if "distribution_settings" in config[requested_form]:
+            for idx, distr_settings in enumerate(config[requested_form]['distribution_settings']):
+                distr_user_name = next((user['name'] for user_id, user in user_cfg.cache \
+                    ["_embedded"]["users"].items() if user_id == distr_settings['user']), None)
+                config[requested_form]['distribution_settings'][idx]['user'] = distr_user_name
     
     return HttpResponse(json.dumps(config, sort_keys=True, ensure_ascii=False))
     

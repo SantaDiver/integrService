@@ -32,3 +32,4 @@ zero_department = "Отдел продаж"
 not_chosen = "Не выбрано"
 ening_statuses = [142, 143]
 succes_status = 142
+no_form = 'no_form'

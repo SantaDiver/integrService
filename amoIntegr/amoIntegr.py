@@ -1,5 +1,4 @@
 # TODO: add functiond for getting/adding/updateing with useful names
-# TODO: change with new API
 
 import json
 import requests
@@ -11,7 +10,7 @@ import sys
 from utils import entity_optional_params
 from utils import update_optional_params
 from utils import get_optional_params
-from utils import succes_status
+from utils import succes_status, no_form
 
 from amoException import AmoException
 
@@ -257,56 +256,124 @@ class AmoIntegr(object):
             
         return response
     
-    #TODO: This should belong different class
-    # TODO: add allowed users list in config
-    # TODO: add weights to users
-    def rotate_user(self, department_id):
+    # TODO: make work time working :)
+    def rotate_user(self, department_id, form=None, **kwargs):
         if not isinstance(department_id, int):
-            raise AmoException("Department id should be an integer!", None) 
-        
+            raise AmoException("Department id should be an integer!", None)
+            
         self.update_cache()
+        cache = self.user.cache
+        if department_id >= 0 and not str(department_id) in cache["_embedded"]["groups"]:
+            message = "Unknown department_id <%s>" % department_id
+            raise AmoException(message, None) 
+        if department_id < 0:
+            department_id = -1
+            
+        if not form:
+            form = no_form
         users_cache = self.user.last_user_cache
+        if not form in users_cache:
+            users_cache[form] = {}
+        users_cache = users_cache[form]
             
         if not "-1" in users_cache:
-            users_cache["-1"] = -1
+            users_cache["-1"] = {}
         if not "0" in users_cache:
-            users_cache["0"] = -1
+            users_cache["0"] = {}
             
         cache = self.user.cache
         groups = cache["_embedded"]["groups"]
+        users = cache["_embedded"]["users"]
         for group_id in groups:
             if not str(group_id) in users_cache:
-                users_cache[str(group_id)] = -1
+                users_cache[str(group_id)] = {}
+        
+        users_cache = users_cache[str(department_id)]
                 
-        if str(department_id) in users_cache:
-            prev_user_id = int(users_cache[str(department_id)])
-        elif department_id < 0:
-            prev_user_id = int(users_cache[str(-1)])
+        if 'distribution_settings' in kwargs:
+            # Delete those, who are not in distribution system
+            # And add those of them, who are new 
+            for user_id in users:
+                if next((x for x in kwargs['distribution_settings'] \
+                    if x['user']==user_id), None) == None:
+                    users_cache.pop(user_id, None)
+                elif not user_id in users_cache:
+                    users_cache[user_id] = 0
+        
         else:
-            message = "Unknown department_id <%s>" % department_id
-            raise AmoException(message, None) 
-         
-        department_users_id = [int(user_id) for user_id, user in 
-            cache["_embedded"]["users"].items()
-            if (department_id < 0 or user["group_id"] == department_id)]
+            # Add new users (everybody allowed, so nobody to delete)
+            for group_id in groups:
+                for user_id in users:
+                    if not user_id in users_cache:
+                        users_cache[user_id] = 0
+        
+        # Delete not active and free users (is actual and distribution) and guys from other groups
+        for user_id, user in users.items():
+            if user_id in users_cache:
+                if user['is_free'] or not user['is_active']:
+                    users_cache.pop(user_id, None)
+                if department_id >= 0 and user['group_id'] != department_id:
+                    users_cache.pop(user_id, None)
+                
+        
+        weekdays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
+        allowed_users = []
+        for user_id, user in users.items():
+            if user['is_free'] or not user['is_active']:
+                continue
+            if department_id >= 0 and not user['group_id'] == department_id:
+                continue
+            if 'distribution_settings' in kwargs:
+                if next((x for x in kwargs['distribution_settings'] \
+                    if x['user']==user_id), None) == None:
+                    continue
+                # TODO: check date
+                
+            allowed_users.append(user_id)
+        
+        if not allowed_users:
+            return None
+        
+        weighted_allowed_users = []
+        for allowed_user in allowed_users:
+            if not 'distribution_settings' in kwargs:
+                weight = users_cache[allowed_user]
+            else:
+                user_settings = next((x for x in kwargs['distribution_settings'] \
+                    if x['user']==allowed_user), None)
+                weight = users_cache[allowed_user]/user_settings['weight']
             
-        department_users_id.sort()
-        min_user_id = department_users_id[0]
-        greater_users_id = [user_id for user_id in department_users_id 
-            if user_id > prev_user_id]
-        if not greater_users_id:
-            next_user_id = min_user_id
-        else:
-            next_user_id = greater_users_id[0]
+            weighted_allowed_users.append({
+                'user' : allowed_user,
+                'weight' : weight
+            })
+        
+        weighted_allowed_users = sorted(weighted_allowed_users, key=lambda k: k['weight'])
+        next_user_id = weighted_allowed_users[0]['user']
                         
-        if department_id >= 0:
-            users_cache[str(department_id)] = next_user_id
-        else:
-            users_cache["-1"] = next_user_id
+        users_cache[next_user_id] += 1
+            
+        # Minus if weights are too big
+        minus = True
+        for user, value in users_cache.items():
+            if 'distribution_settings' in kwargs and value < \
+                next((x for x in kwargs['distribution_settings'] if x['user']==user), None)['weight']:
+                minus = False
+            elif value < 1:
+                minus = False
+                
+        if minus:
+            for user in users_cache:
+                if 'distribution_settings' in kwargs:
+                    users_cache[user] -= next((x for x in kwargs['distribution_settings'] \
+                        if x['user']==user), None)['weight']
+                else:
+                    users_cache[user] -= 1
+            
         
-        self.user.last_user_cache = users_cache
+        self.user.last_user_cache[form][str(department_id)] = users_cache
         
-        return users_cache[str(department_id)]
+        return next_user_id
     
     # Elemnt type 1 - contact, 2 - lead, 3 - company
     def add_task(self, element_id, element_type, task_type, text, complete_till_at,
@@ -591,9 +658,11 @@ class AmoIntegr(object):
     # tag_for_rec = str
     # time_to_complete_rec_task
     # rec_lead_task_text
+    # fields_to_ckeck_dups
+    # distribution_settings
     
     ###
-    def send_order_data(self, lead_data={}, contact_data={}, company_data={}, 
+    def send_order_data(self, lead_data={}, contact_data={}, company_data={}, form=None, \
         generate_tasks_for_rec=False, department_id=-1, **kwargs):
             
         if not lead_data and not contact_data and not company_data:
@@ -601,19 +670,19 @@ class AmoIntegr(object):
             
         if generate_tasks_for_rec and (not "rec_lead_task_text" in kwargs or
             not "time_to_complete_rec_task" in kwargs):
-            raise AmoException("CFG params are needed to generate rec tasks!", None)
+            raise AmoException("Kwarg params are needed to generate rec tasks!", None)
         
         self.update_cache()            
         contact_duplicates = []
         company_duplicates = []
         if "fields_to_check_dups" in kwargs:
-            if contact_data and "contacts" in self.cfg["fields_to_check_dups"]:
+            if contact_data and "contacts" in kwargs["fields_to_check_dups"]:
                 contact_duplicates += self.find_duplicates(contact_data["custom_fields"], 
-                    "contacts", self.cfg["fields_to_check_dups"]["contacts"], **kwargs)
+                    "contacts", kwargs["fields_to_check_dups"]["contacts"], **kwargs)
             
-            if company_data and "companies" in self.cfg["fields_to_check_dups"]:
+            if company_data and "companies" in kwargs["fields_to_check_dups"]:
                 company_duplicates += self.find_duplicates(company_data["custom_fields"], 
-                    "companies", self.cfg["fields_to_check_dups"]["companies"], **kwargs)
+                    "companies", kwargs["fields_to_check_dups"]["companies"], **kwargs)
         
         if contact_duplicates:
             responsible_user_id = contact_duplicates[0]["responsible_user_id"]
@@ -622,7 +691,11 @@ class AmoIntegr(object):
         elif "responsible_user_id" in kwargs:
             responsible_user_id = kwargs["responsible_user_id"]
         else:
-            responsible_user_id = self.rotate_user(department_id)
+            if 'distribution_settings' in kwargs:
+                responsible_user_id = self.rotate_user(department_id, form, \
+                    distribution_settings=kwargs['distribution_settings'])
+            else:
+                responsible_user_id = self.rotate_user(department_id, form)
         
         if contact_duplicates:
             united_data = self.unite_entities(

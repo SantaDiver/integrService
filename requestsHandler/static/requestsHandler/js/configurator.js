@@ -1,6 +1,6 @@
 function accessesSchema(config) {
   return {
-    "title": "Форма заявок с сайта",
+    "title": "Доступы в amoCRM",
     "type": "object",
     "properties" : {
       "user" : {
@@ -74,6 +74,60 @@ function formSchema(config){
         "title": "Тег для повторных сделок",
         "propertyOrder": 10,
         "type" : "string"
+      },
+      
+      "distribution_settings" : {
+        "type": "array",
+        "options": {
+          "collapsed": true,
+          "disable_array_reorder" : true,
+        },
+        "format": "table",
+        "propertyOrder": 11,
+        "description": "Внимание! Изменяя это поле, вы сбросите счетчик лидов!",
+        "title": "Список людей, на которых распределяются сделки",
+        "uniqueItems": true,
+        "items": {
+          "type": "object",
+          "title": "Пользователь",
+          "uniqueItems": true,
+          "properties": {
+            "user": {
+              "type": "string",
+              "enum": config["allowed_users"]
+            },
+            "weight": {
+              "type": "integer"
+            },
+            "allowed_time" : {
+              "type": "array",
+              "options": {
+                "collapsed": false,
+                "disable_array_reorder" : true,
+              },
+              "format": "table",
+              "uniqueItems": true,
+              "items": {
+                "type": "object",
+                "uniqueItems": true,
+                "properties": {
+                  "week_day": {
+                    "type": "string",
+                    "enum": ["Понедельник", "Вторник"]
+                  },
+                  "from": {
+                    "type": "string",
+                    "format": "time"
+                  },
+                  "to": {
+                    "type": "string",
+                    "format": "time"
+                  }
+                }
+              }
+            }
+          }
+        }
       },
       
       // --------------------------------------------------
@@ -233,13 +287,13 @@ $(document).ready(function(){
             contact_fields.push({
               "amoCRM" : field,
               "site" : config[hash]["contact_data"][field]
-            })
+            });
           }
           var contact_fields_to_check_dups = new Array();
           for (var field in config[hash]["fields_to_check_dups"]["contacts"]) {
             contact_fields_to_check_dups.push({
               "field" : config[hash]["fields_to_check_dups"]["contacts"][field],
-            })
+            });
           }
           
           var company_fields = new Array();
@@ -247,13 +301,13 @@ $(document).ready(function(){
             company_fields.push({
               "amoCRM" : field,
               "site" : config[hash]["company_data"][field]
-            })
+            });
           }
           var company_fields_to_check_dups = new Array();
           for (var field in config[hash]["fields_to_check_dups"]["companies"]) {
             company_fields_to_check_dups.push({
               "field" : config[hash]["fields_to_check_dups"]["companies"][field],
-            })
+            });
           }
           
           var lead_fields = new Array();
@@ -261,7 +315,7 @@ $(document).ready(function(){
             lead_fields.push({
               "amoCRM" : field,
               "site" : config[hash]["lead_data"][field]
-            })
+            });
           }
           
           editor.setValue({
@@ -273,6 +327,7 @@ $(document).ready(function(){
             "rec_lead_task_text" : config[hash]["rec_lead_task_text"],
             "time_to_complete_rec_task" : config[hash]["time_to_complete_rec_task"]/60,
             "tag_for_rec" : config[hash]["tag_for_rec"],
+            "distribution_settings" : config[hash]["distribution_settings"],
             
             "contact_fields": contact_fields,
             "contact_fields_to_check_dups" : contact_fields_to_check_dups,
@@ -308,7 +363,7 @@ $(document).ready(function(){
             }
           });
           data = editor.getValue();
-          data['form'] = hash
+          data['form'] = hash;
           var jqxhr = $.post("/setConfig", JSON.stringify(data), function() {
             location.reload();
           }, "json");
@@ -321,6 +376,6 @@ $(document).ready(function(){
   hash = hash.substring(1);
   if (hash === '') hash = 'accesses';
   
-  loadConfig(hash)
+  loadConfig(hash);
   
 });
