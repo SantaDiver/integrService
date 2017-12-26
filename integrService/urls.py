@@ -29,5 +29,6 @@ urlpatterns = [
     url(r'login', requestsHandler_views.login_user, name='login'),
     url(r'logout', logout, {'next_page': settings.LOGOUT_REDIRECT_URL}, name='logout'),
     url(r'newForm', requestsHandler_views.newForm, name='newForm'),
+    url(r'deleteForm', requestsHandler_views.deleteForm, name='deleteForm'),
     url(r'^\w*$', requestsHandler_views.configurator, name='configurator'),
 ]

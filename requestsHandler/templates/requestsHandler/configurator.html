@@ -18,7 +18,7 @@
   <ul class="nav navbar-nav">
     <li><a href="/accesses">Доступы в amoCRM</a></li>
     <li class="dropdown">
-      <a href="/" class="dropdown-toggle" data-toggle="dropdown">Пользователские формы <span class="caret"></span></a>
+      <a href="/" class="dropdown-toggle" data-toggle="dropdown">Пользователские формы<span class="caret"></span></a>
       <ul class="dropdown-menu" role="menu">
         {% for config in config_names   %}
           <li><a href="/{{config}}">{{config}}</a></li>
@@ -28,6 +28,9 @@
       </ul>
     </li>
     <li><a href="/jivo_site">JivoSITE</a></li>
+  </ul>
+  <ul class="nav navbar-nav navbar-fixed-bottom">
+    <li><a href="/logout"><span class="glyphicon glyphicon-log-out"></span> Выйти </a></li>
   </ul>
 </div>
 
@@ -46,9 +49,13 @@
   
     <div id="editor_holder"></div>
     
-    <div class = "send">
-      <button type="button" class="btn btn-success">Отправить</button>
+    <div class="row">
+      <div class = "col-xs-2 col-md-2 col-lg-2 col-sm-2 send">
+        <button type="button" class="btn btn-success">Отправить</button>
+      </div>
+      <div class = "col-xs-2 col-md-2 col-lg-2 col-sm-2 delete" hidden>
+        <button type="button" class="btn btn-danger">Удалить</button>
+      </div>
     </div>
-  
   {% endif %}
 </div>
