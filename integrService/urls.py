@@ -30,5 +30,6 @@ urlpatterns = [
     url(r'logout', logout, {'next_page': settings.LOGOUT_REDIRECT_URL}, name='logout'),
     url(r'newForm', requestsHandler_views.newForm, name='newForm'),
     url(r'deleteForm', requestsHandler_views.deleteForm, name='deleteForm'),
+    url(r'test', requestsHandler_views.test, name='test'),
     url(r'^\w*$', requestsHandler_views.configurator, name='configurator'),
 ]

@@ -4,3 +4,4 @@ requests
 -e git+https://github.com/tigrus/dadata-python#egg=dadata
 django-prettyjson
 django-jsoneditor
+raven --upgrade

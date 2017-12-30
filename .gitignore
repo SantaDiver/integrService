@@ -4,3 +4,4 @@ __pycache__
 myvenv
 /static
 .c9
+*.log

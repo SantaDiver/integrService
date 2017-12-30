@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import raven
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -23,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '1y7#)4^x3q%ee1^j#q3fd-(en*yhup_=ig-hkz2jm0=(-f=7o0'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['amointegr-python-santadiver.c9users.io']
 
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     'requestsHandler',
     'prettyjson',
     'jsoneditor',
+    'raven.contrib.django.raven_compat',
 ]
 
 MIDDLEWARE = [
@@ -132,3 +134,34 @@ LOGOUT_REDIRECT_URL = '/login'
 
 DADATA_KEY = "a25848ba56fb681960880dd73fe6e55849296121"
 DADATA_SECRET = "ad35dc25999cd6b03320be03f24fa14aa144fba8"
+
+RAVEN_CONFIG = {
+    'dsn': 'https://69c151a0975e42f5970c262ef7fa4339:c3fb3b6ba224472da3f1c8018726b91e@sentry.io/264422',
+    'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'maxBytes' : 1024*1024*5, # 5 MB
+            'filename': os.path.join(BASE_DIR, 'uncought_exceptions.log'),
+            'formatter':'standard',
+        }
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'ERROR',
+            'propagate': True,
+        }
+    },
+}

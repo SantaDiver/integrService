@@ -3,6 +3,6 @@
 To restart Postgres
 
 ```
-service postgresql restart
+sudo service postgresql restart
 
 ```
