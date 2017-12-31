@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '1y7#)4^x3q%ee1^j#q3fd-(en*yhup_=ig-hkz2jm0=(-f=7o0'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['amointegr-python-santadiver.c9users.io']
 
@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'prettyjson',
     'jsoneditor',
     'raven.contrib.django.raven_compat',
+    'simple_history',
 ]
 
 MIDDLEWARE = [
@@ -52,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
 ]
 
 ROOT_URLCONF = 'integrService.urls'
@@ -135,10 +137,10 @@ LOGOUT_REDIRECT_URL = '/login'
 DADATA_KEY = "a25848ba56fb681960880dd73fe6e55849296121"
 DADATA_SECRET = "ad35dc25999cd6b03320be03f24fa14aa144fba8"
 
-RAVEN_CONFIG = {
-    'dsn': 'https://69c151a0975e42f5970c262ef7fa4339:c3fb3b6ba224472da3f1c8018726b91e@sentry.io/264422',
-    'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
-}
+# RAVEN_CONFIG = {
+#     'dsn': 'https://69c151a0975e42f5970c262ef7fa4339:c3fb3b6ba224472da3f1c8018726b91e@sentry.io/264422',
+#     'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
+# }
 
 LOGGING = {
     'version': 1,

@@ -53,3 +53,5 @@ succes_status = 142
 no_form = 'no_form'
 weekdays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
 default_name = 'Имя не указано'
+phone_field = 'Телефон'
+email_field = 'Email'

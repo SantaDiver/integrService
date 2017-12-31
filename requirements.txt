@@ -5,3 +5,4 @@ requests
 django-prettyjson
 django-jsoneditor
 raven --upgrade
+django-simple-history

@@ -13,8 +13,8 @@
 
 </head>
 
-<div class="navbar navbar-inverse navbar-fixed-left">
-  <a class="navbar-brand" href="/change_company">SNMsoft</a>
+<div class="navbar navbar-default">
+  <a class="navbar-brand" href="/change_company">{{username}}</a>
   <ul class="nav navbar-nav">
     <li><a href="/accesses">Доступы в amoCRM</a></li>
     <li class="dropdown">
@@ -30,7 +30,7 @@
     <li><a href="/jivo_site">JivoSITE</a></li>
   </ul>
   
-  <ul class="nav navbar-nav navbar-fixed-bottom">
+  <ul class="nav navbar-nav navbar-right">
     <li><a href="/logout"><span class="glyphicon glyphicon-log-out"></span> Выйти </a></li>
   </ul>
 </div>
@@ -48,6 +48,10 @@
   
   {% else %}
   
+    <div class="alert alert-danger invalid-amo" role="alert" hidden>
+      Неверные данные для входа в amoCRM!
+      <br><a href="/accesses">Доступы в amoCRM</a>
+    </div>
     <div id="editor_holder"></div>
     
     <div class="row">

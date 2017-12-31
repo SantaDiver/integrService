@@ -270,9 +270,10 @@ $(document).ready(function(){
   function loadConfig(hash) {
     $.get('/getConfig', {'hash':hash}, function( data ) {
         var config = JSON.parse(data);
-        if (!config['valid_amo'] && hash != 'accesses') {
-          alert('Неверные данные для входа в amoCRM!');
-          return;
+        if (!config['valid_amo']) {
+          // alert('Неверные данные для входа в amoCRM!');
+          $('.invalid-amo').show();
+          if (hash != 'accesses') return;
         }
 
         if (hash == 'accesses') var schema = accessesSchema(config);
@@ -405,6 +406,6 @@ $(document).ready(function(){
   hash = hash.substring(1);
   if (hash === '') hash = 'accesses';
   
-  loadConfig(hash);
+  if (hash != 'add_form') loadConfig(hash);
   
 });

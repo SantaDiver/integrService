@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 from django.contrib.auth.models import User
+from simple_history.models import HistoricalRecords
 
 import hashlib
 import time
@@ -27,6 +28,10 @@ class UserConfig(models.Model):
     user = models.OneToOneField(User, default=get_default_user)
     
     config = JSONField(default={}, blank=True)
+    account_rights = JSONField(default={}, blank=True)
     cache = JSONField(default={}, blank=True)
     fields_cache = JSONField(default={}, blank=True)
     last_user_cache = JSONField(default={}, blank=True)
+    
+    
+    history = HistoricalRecords()

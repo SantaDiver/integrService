@@ -5,15 +5,11 @@ import json
 
 from django.contrib.postgres.fields import JSONField
 from prettyjson import PrettyJSONWidget
-
-# Register your models here.
-
 from jsoneditor.forms import JSONEditor
-
-# admin.site.register(UserConfig)
+from simple_history.admin import SimpleHistoryAdmin
 
 @admin.register(UserConfig)
-class MyAdmin(admin.ModelAdmin):
+class MyAdmin(SimpleHistoryAdmin):
     list_display = ("get_username", "get_email")
     raw_id_fields = ("user",)
     search_fields = ("user__username",)

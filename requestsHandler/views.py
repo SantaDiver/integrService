@@ -31,12 +31,9 @@ from requests_logger import log_request, log_exception, log_info, Message_type, 
     get_current_function
     
 # TODO: Dadata city, email check (get it outside the form)
-# TODO: make rights config
-# TODO: userinterface
-# TODO: Add history
-# TODO: Add history (simple-history)
 # TODO: test
 # TODO: Private hash forms
+# TODO: add admin pannel in user interface
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +48,12 @@ def siteHandler(request):
             return HttpResponse('Form field is required')
         
         user_cfg = get_object_or_404(UserConfig, public_hash=request.POST['public_hash'])
-        log_info(user_cfg.user.username, get_current_function(), request.POST)
+        log_info('Got data ', user_cfg.user.username, get_current_function(), request.POST)
+        
+        if not user_cfg.user.is_active:
+            log_info('User is not active ', user_cfg.user.username, \
+                get_current_function(), user_cfg.account_rights)
+            raise Http404('User is not active!')
         
         if not request.POST['form'] in user_cfg.config:
             return HttpResponseNotFound('No form %s in config %s' % \
@@ -61,7 +63,7 @@ def siteHandler(request):
         api = AmoIntegr(user_cfg)
         
         data_to_send, generate_tasks_for_rec, department_id, internal_kwargs = conform_fields(
-            request.POST, user_cfg.config[requested_form])
+            request.POST, user_cfg.config[requested_form], user_cfg.account_rights)
                 
         if 'distribution_settings' in user_cfg.config[requested_form] and \
             user_cfg.config[requested_form]['distribution_settings']:
@@ -85,8 +87,7 @@ def siteHandler(request):
                     another_conform['distribution_settings']:
                     internal_kwargs['distribution_settings'] = another_conform['distribution_settings']
                 requested_form = another_conform
-                    
-            
+        
         reslut = api.send_order_data(
             contact_data = data_to_send['contact_data'], 
             lead_data = data_to_send['lead_data'], 
@@ -117,7 +118,10 @@ def configurator(request):
         
         if not request.path[1:] or request.path[1:] in config or \
             request.path[1:] in ['add_form', 'accesses']:
-            return render(request, 'requestsHandler/configurator.html', {'config_names':config_names})
+            return render(request, 'requestsHandler/configurator.html', {
+                'config_names':config_names, 
+                'username': user_cfg.user.username
+            })
         else:
             raise Http404('Path %s wasnt found' % request.path[1:])
             
@@ -149,7 +153,6 @@ def setConfig(request):
                 user_cfg.config[field] = got_config[field]
                 
         if got_config['form'] == 'accesses':
-            pprint(got_config)
             user_cfg.save()
             return HttpResponse(200)
         
@@ -410,7 +413,7 @@ def newForm(request):
             
         user_cfg.save()
         
-        log_info('Updated config', user_cfg.user.username, get_current_function(), user_cfg.config)
+        log_info('New form ', user_cfg.user.username, get_current_function(), user_cfg.config)
         return redirect('/'+request.POST['name'])
     
     except AmoException as e:
@@ -437,7 +440,7 @@ def deleteForm(request):
             
         user_cfg.save()
         
-        log_info('Updated config', user_cfg.user.username, get_current_function(), user_cfg.config)
+        log_info('Deleted form ', user_cfg.user.username, get_current_function(), user_cfg.config)
         return redirect(configurator)
     
     except AmoException as e:
