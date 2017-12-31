@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="{% static "requestsHandler/css/sidebar.css" %}">
   <script  src="{% static "requestsHandler/js/configurator.js" %}"></script>
   <script  src="{% static "requestsHandler/js/bootbox.min.js" %}"></script>
+  <script  src="{% static "requestsHandler/js/addform.js" %}"></script>
 
 </head>
 
@@ -47,7 +48,7 @@
           <input type="string" class="form-control" name="name" id="name" aria-describedby="Имя" placeholder="Введите имя">
           <small id="emailHelp" class="form-text text-muted">Должно быть уникальным</small>
         </div>
-        <button type="submit" class="btn btn-primary">Отправить</button>
+        <button type="submit" class="btn btn-primary addform">Отправить</button>
       </form>
   
   {% else %}

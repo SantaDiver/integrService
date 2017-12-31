@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseNotFound
+from django.http import HttpResponseNotFound, HttpResponseBadRequest
 from django.http import Http404
 from requestsHandler.models import UserConfig
 import logging
@@ -41,11 +41,11 @@ logger = logging.getLogger(__name__)
 def siteHandler(request):
     try:
         if request.method != 'POST':
-            return HttpResponse('Waiting for POST request')
+            return HttpResponseBadRequest('Waiting for POST request')
         if not 'public_hash' in request.POST:
-            return HttpResponse('Public hash field is required')
+            return HttpResponseBadRequest('Public hash field is required')
         if not 'form' in request.POST:
-            return HttpResponse('Form field is required')
+            return HttpResponseBadRequest('Form field is required')
         
         user_cfg = get_object_or_404(UserConfig, public_hash=request.POST['public_hash'])
         log_info('Got data ', user_cfg.user.username, get_current_function(), request.POST)
@@ -105,7 +105,7 @@ def siteHandler(request):
     except AmoException as e:
         context = e.context
         log_exception(request.user.username, context)
-        return HttpResponse(status=500)
+        return HttpResponseBadRequest()
 
 @login_required
 @log_request(Message_type.INBOUND)
@@ -128,7 +128,7 @@ def configurator(request):
     except AmoException as e:
         context = e.context
         log_exception(request.user.username, context)
-        return HttpResponse(status=500)
+        return HttpResponseBadRequest()
     
 
 @login_required
@@ -136,7 +136,7 @@ def configurator(request):
 def setConfig(request):
     try:
         if request.method != 'POST':
-            return HttpResponse('Waiting for POST request')
+            return HttpResponseBadRequest('Waiting for POST request')
             
         got_config = json.loads(request.body.decode('utf-8'))
         if not 'form' in got_config:
@@ -253,16 +253,16 @@ def setConfig(request):
     except AmoException as e:
         context = e.context
         log_exception(request.user.username, context)
-        return HttpResponse(status=500)
+        return HttpResponseBadRequest()
     
 @login_required 
 @log_request(Message_type.INBOUND)
 def getConfig(request):
     try:
         if request.method != 'GET':
-            return HttpResponse('Waiting for GET request')
+            return HttpResponseBadRequest('Waiting for GET request')
         if not 'hash' in request.GET:
-            return HttpResponse('Hash parameter needed!')
+            return HttpResponseBadRequest('Hash parameter needed!')
             
         requested_form = request.GET['hash']
         
@@ -378,7 +378,7 @@ def getConfig(request):
     except AmoException as e:
         context = e.context
         log_exception(request.user.username, context)
-        return HttpResponse(status=500)
+        return HttpResponseBadRequest()
     
 def login_user(request):
     if request.method == 'POST':
@@ -400,37 +400,39 @@ def log_user_out(request):
 def newForm(request):
     try:
         if request.method != 'POST':
-            return HttpResponse('Waiting for POST request')
-        if not 'name' in request.POST:
-            return HttpResponse('name is needed')
+            return HttpResponseBadRequest('Waiting for POST request')
+        
+        got_data = json.loads(request.body.decode('utf-8'))
+        if not 'name' in got_data:
+            return HttpResponseBadRequest('name is needed')
             
         user_cfg = get_object_or_404(UserConfig, user=request.user)
         
-        if request.POST['name'] and not request.POST['name'] in user_cfg.config:
-            user_cfg.config[request.POST['name']] = {}
+        if got_data['name'] and not got_data['name'] in user_cfg.config:
+            user_cfg.config[got_data['name']] = {}
         else:
-            return redirect('/add_form')
+            return HttpResponseBadRequest()
             
         user_cfg.save()
         
         log_info('New form ', user_cfg.user.username, get_current_function(), user_cfg.config)
-        return redirect('/'+request.POST['name'])
+        return HttpResponse(200)
     
     except AmoException as e:
         context = e.context
         log_exception(request.user.username, context)
-        return HttpResponse(status=500)
+        return HttpResponseBadRequest()
     
 @login_required
 @log_request(Message_type.INBOUND)
 def deleteForm(request):
     try:
         if request.method != 'POST':
-            return HttpResponse('Waiting for POST request')
+            return HttpResponseBadRequest('Waiting for POST request')
     
         got_data = json.loads(request.body.decode('utf-8'))
         if not 'name' in got_data:
-            return HttpResponse('name is needed')
+            return HttpResponseBadRequest('name is needed')
             
         user_cfg = get_object_or_404(UserConfig, user=request.user)
         
@@ -446,7 +448,7 @@ def deleteForm(request):
     except AmoException as e:
         context = e.context
         log_exception(request.user.username, context)
-        return HttpResponse(status=500)
+        return HttpResponseBadRequest()
     
 @login_required
 @log_request(Message_type.INBOUND)
