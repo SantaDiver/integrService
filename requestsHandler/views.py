@@ -409,7 +409,7 @@ def newForm(request):
         if request.POST['name'] and not request.POST['name'] in user_cfg.config:
             user_cfg.config[request.POST['name']] = {}
         else:
-            return redirect(newForm)
+            return redirect('/add_form')
             
         user_cfg.save()
         
@@ -441,7 +441,7 @@ def deleteForm(request):
         user_cfg.save()
         
         log_info('Deleted form ', user_cfg.user.username, get_current_function(), user_cfg.config)
-        return redirect(configurator)
+        return HttpResponse(200)
     
     except AmoException as e:
         context = e.context

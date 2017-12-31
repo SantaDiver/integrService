@@ -10,6 +10,7 @@
   
   <link rel="stylesheet" href="{% static "requestsHandler/css/sidebar.css" %}">
   <script  src="{% static "requestsHandler/js/configurator.js" %}"></script>
+  <script  src="{% static "requestsHandler/js/bootbox.min.js" %}"></script>
 
 </head>
 
@@ -37,6 +38,9 @@
 
 <div class="container">
   {% if '/add_form' == request.path %}
+      <div class="alert alert-warning invalid-name" role="alert" hidden>
+        Введите непустое уникальное имя
+      </div>
       <form action="/newForm", method="post">{% csrf_token %}
         <div class="form-group">
           <label for="name">Имя новой формы</label>
@@ -55,7 +59,7 @@
     <div id="editor_holder"></div>
     
     <div class="row">
-      <div class = "col-xs-2 col-md-2 col-lg-2 col-sm-2 send">
+      <div class = "col-xs-2 col-md-2 col-lg-2 col-sm-2 send" hidden>
         <button type="button" class="btn btn-success">Отправить</button>
       </div>
       <div class = "col-xs-2 col-md-2 col-lg-2 col-sm-2 delete" hidden>

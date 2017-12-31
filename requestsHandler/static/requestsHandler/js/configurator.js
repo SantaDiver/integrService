@@ -275,7 +275,8 @@ $(document).ready(function(){
           $('.invalid-amo').show();
           if (hash != 'accesses') return;
         }
-
+        
+        $('.send').show();
         if (hash == 'accesses') var schema = accessesSchema(config);
         else var schema = formSchema(config);
     
@@ -386,17 +387,36 @@ $(document).ready(function(){
         if (hash != 'accesses') {
           $('.delete').show();
           $('.delete').click(function(){
-            var csrftoken = getCookie('csrftoken');
-            $.ajaxSetup({
-              beforeSend: function(xhr, settings) {
-                xhr.setRequestHeader('X-CSRFToken', csrftoken);
+            bootbox.confirm({
+              message: "Вы дейстивтельно хотите удалить эту форму?",
+              buttons: {
+                  confirm: {
+                      label: 'Да',
+                      className: 'btn-success'
+                  },
+                  cancel: {
+                      label: 'Нет',
+                      className: 'btn-danger'
+                  }
+              },
+              callback: function (result) {
+                if (result) {
+                  var csrftoken = getCookie('csrftoken');
+                  $.ajaxSetup({
+                    beforeSend: function(xhr, settings) {
+                      xhr.setRequestHeader('X-CSRFToken', csrftoken);
+                    }
+                  });
+                  data = {};
+                  data['name'] = hash;
+                  $.post('/deleteForm', JSON.stringify(data), function() {
+                    window.location.replace('/');
+                  }, 'json');
+                }
               }
             });
-            data = {};
-            data['name'] = hash;
-            $.post('/deleteForm', JSON.stringify(data), function() {
-              window.location.replace('/');
-            }, 'json');
+                        
+
           });
         }
     });
