@@ -34,6 +34,9 @@ from requests_logger import log_request, log_exception, log_info, Message_type, 
 # TODO: test
 # TODO: Private hash forms
 # TODO: add admin pannel in user interface
+# TODO: rules to process before sending
+# TODO: premade configs
+# TODO: start using React :)
 
 logger = logging.getLogger(__name__)
 
@@ -70,10 +73,10 @@ def siteHandler(request):
             internal_kwargs['distribution_settings'] = \
                user_cfg.config[requested_form]['distribution_settings']
                
-        if 'another_distribution' in user_cfg.config[request.POST['form']]:
+        if 'another_distribution' in user_cfg.config[requested_form]:
             another_distribution = user_cfg.config[requested_form]['another_distribution']
             if another_distribution != not_chosen and another_distribution != requested_form:
-                another_conform = user_cfg.config['another_distribution']
+                another_conform = user_cfg.config[another_distribution]
                 department_id = -1
                 if 'department_id' in another_conform and \
                     another_conform['department_id'] != not_chosen:
@@ -86,7 +89,7 @@ def siteHandler(request):
                 if 'distribution_settings' in another_conform and \
                     another_conform['distribution_settings']:
                     internal_kwargs['distribution_settings'] = another_conform['distribution_settings']
-                requested_form = another_conform
+                requested_form = another_distribution
         
         reslut = api.send_order_data(
             contact_data = data_to_send['contact_data'], 
@@ -218,7 +221,7 @@ def setConfig(request):
                 else:
                     for group_id, group in user_cfg.cache['_embedded']['groups'].items():
                         if group['name'] == got_config['department']:
-                             user_cfg.config[form]['department_id'] = group_id
+                             user_cfg.config[form]['department_id'] = int(group_id)
             
             if not 'pipelines' in user_cfg.config[form]:
                 user_cfg.config[form]['pipelines'] = {}

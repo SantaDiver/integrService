@@ -1,6 +1,8 @@
 from dadata.plugins.django import DjangoDaDataClient
 from utils import one_by_one, not_chosen, default_name, phone_field, email_field
 
+from pprint import pprint
+
 def conform_fields(data, conformity, rights):
     data_to_send = {
         'contact_data' : {},
@@ -71,7 +73,7 @@ def conform_fields(data, conformity, rights):
                         internal_kwargs['additional_data_to_query'][phone_field].append({
                             'WORK' : client.result.number
                         })
-                        
+    
     return (data_to_send, generate_tasks_for_rec, department_id, internal_kwargs)
     
 def find_pipline_id(pipelines, name):

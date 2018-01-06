@@ -14,6 +14,7 @@ from utils import update_optional_params
 from utils import get_optional_params
 from utils import succes_status, no_form, weekdays
 from utils import time_in_range
+from utils import one_by_one
 
 from amoException import AmoException
 
@@ -23,6 +24,15 @@ class AmoIntegr(object):
         self.cfg = user.config
         self.request = requests.session()
         self._auth()
+        
+    def generate_context(self):
+        return {
+            'user' : self.user.user.username, 
+            'config' : self.user.config,
+            'cache' : self.user.cache,
+            'fields_cache' : self.user.fields_cache,
+            'last_user_cache' : self.user.last_user_cache
+        }
             
     def _auth(self):
         url = 'https://%s.amocrm.ru/private/api/auth.php?type=json' % (
@@ -35,14 +45,9 @@ class AmoIntegr(object):
         })
 
         if not response.json()['response']['auth']:
-            raise AmoException('Auth Failed', {
-                'response' : response, 
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            })
+            context = self.generate_context()
+            context['response'] = response
+            raise AmoException('Auth Failed', context)
             
             
     def call(self, request, request_method, params={}):
@@ -54,13 +59,8 @@ class AmoIntegr(object):
         elif request_method == 'POST':
             response = self.request.post(url, json = params)
         else:
-            raise AmoException('Unknown request method %s' % request_method, {
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            })
+            context = self.generate_context()
+            raise AmoException('Unknown request method %s' % request_method, context)
             
         if (response.status_code == 401):
             self._auth()
@@ -73,14 +73,9 @@ class AmoIntegr(object):
             response.reason=='No Content')):
 
             message = 'Status code is %s' % response.status_code
-            raise AmoException(message, {
-                'response' : response, 
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            })
+            context = self.generate_context()
+            context['response'] = response
+            raise AmoException(message, context)
         
         if (response.status_code == 204 and response.reason=='No Content'):
             return {
@@ -139,7 +134,8 @@ class AmoIntegr(object):
         for (name, value) in fields.items():
             if not value:
                 continue
-                # raise AmoException('Empty field value!', None)
+                # context = self.generate_context()
+                # raise AmoException('Empty field value!', context)
             
             field_from_cache = fields_cache[type_of_element][name]
            
@@ -168,13 +164,14 @@ class AmoIntegr(object):
             #         })
                 
             else:
-                if type(value) is list:
+                if type(value) is list and 'enums' in field_from_cache:
                     enum_dict = dict((v,k) for (k,v) in field_from_cache['enums'].items())
                     for subvalue in value:
-                        translated_field['values'].append({
-                            'enum' : enum_dict[subvalue],
-                            'value' : subvalue
-                        })
+                        if subvalue in enum_dict:
+                            translated_field['values'].append({
+                                'enum' : enum_dict[subvalue],
+                                'value' : subvalue
+                            })
                 else:
                     translated_field['values'].append({
                         'value' : value,
@@ -192,13 +189,8 @@ class AmoIntegr(object):
             
         if not entity_type in entity_optional_params:
             message = 'Unknown entity type <%s>' % entity_type
-            raise AmoException(message, {
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            })
+            context = self.generate_context()
+            raise AmoException(message, context)
         
         if translate:
             translated_fields = self.translate_fields(custom_fields, entity_type)
@@ -219,13 +211,8 @@ class AmoIntegr(object):
                 params_to_pass[key] = value
             else:
                 message = 'Param <%s> is incorrect' % key
-                raise AmoException(message, {
-                    'user' : self.user.user.username, 
-                    'config' : self.user.config,
-                    'cache' : self.user.cache,
-                    'fields_cache' : self.user.fields_cache,
-                    'last_user_cache' : self.user.last_user_cache
-                })
+                context = self.generate_context()
+                raise AmoException(message, context)
         
         if not call:
             return params_to_pass
@@ -244,13 +231,8 @@ class AmoIntegr(object):
             
         if not entity_type in entity_optional_params:
             message = 'Unknown entity type <%s>' % entity_type
-            raise AmoException(message, {
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            })
+            context = self.generate_context()
+            raise AmoException(message, context)
         
         params_to_pass = {
             'id' : entity_id,
@@ -269,13 +251,8 @@ class AmoIntegr(object):
                 params_to_pass[key] = value
             elif not key in ['custom_fields']:
                 message = 'Param <%s> is incorrect' % key
-                raise AmoException(message, {
-                    'user' : self.user.user.username, 
-                    'config' : self.user.config,
-                    'cache' : self.user.cache,
-                    'fields_cache' : self.user.fields_cache,
-                    'last_user_cache' : self.user.last_user_cache
-                })
+                context = self.generate_context()
+                raise AmoException(message, context)
         
         if not call:
             return params_to_pass
@@ -292,22 +269,12 @@ class AmoIntegr(object):
     def get_entity(self, entity_type, **kwargs):
         if not entity_type in get_optional_params and entity_type != 'tasks':
             message = 'Unknown entity type <%s>' % entity_type
-            raise AmoException(message, {
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            })
+            context = self.generate_context()
+            raise AmoException(message, context)
         
         if entity_type == 'customers':
-            raise AmoException('Get entity doesn\'t work with customers!', {    
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            })
+            context = self.generate_context()
+            raise AmoException('Get entity doesn\'t work with customers!', context)
             
         params_to_pass = {}
         
@@ -316,13 +283,8 @@ class AmoIntegr(object):
                 params_to_pass[key] = value
             else:
                 message = 'Param <%s> is incorrect' % key
-                raise AmoException(message, {
-                    'user' : self.user.user.username, 
-                    'config' : self.user.config,
-                    'cache' : self.user.cache,
-                    'fields_cache' : self.user.fields_cache,
-                    'last_user_cache' : self.user.last_user_cache
-                })  
+                context = self.generate_context()
+                raise AmoException(message, context)  
                 
         response = self.call('api/v2/%s' % entity_type, 'GET', params_to_pass)
             
@@ -330,25 +292,16 @@ class AmoIntegr(object):
     
     def rotate_user(self, department_id, form=None, **kwargs):
         if not isinstance(department_id, int):
-            raise AmoException('Department id should be an integer!', {
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            })
+            context = self.generate_context()
+            raise AmoException('Department id should be an integer!', context)
             
         self.update_cache()
         cache = self.user.cache
-        if department_id >= 0 and not str(department_id) in cache['_embedded']['groups']:
+        if department_id > 0 and not str(department_id) in cache['_embedded']['groups']:
             message = 'Unknown department_id <%s>' % department_id
-            raise AmoException(message, {
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            }) 
+            context = self.generate_context()
+            raise AmoException(message, context) 
+            
         if department_id < 0:
             department_id = -1
             
@@ -421,7 +374,6 @@ class AmoIntegr(object):
                         if x['week_day']==week_day), None)
                     if not allowed_time:
                         continue
-                    pprint(time_in_range(now, allowed_time['from'], allowed_time['to']))
                     if not time_in_range(now, allowed_time['from'], allowed_time['to']):
                         continue
                 
@@ -485,23 +437,13 @@ class AmoIntegr(object):
             if t['id'] == task_type or t['name'] == task_type]
         if not task_types:
             message = 'Unknown task_type <%s>' % task_type
-            raise AmoException(message, {
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            }) 
+            context = self.generate_context()
+            raise AmoException(message, context) 
             
         if not element_type in [1,2,3,12, 'contacts', 'leads', 'companies', 'customers']:
             message = 'Unknown element_type <%s>' % element_type
-            raise AmoException(message, {
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            }) 
+            context = self.generate_context()
+            raise AmoException(message, context) 
         
         if not isinstance(element_type, int):
             element_type = {'contacts':1, 'leads':2, 'companies':3, 'customers':12}[element_type]
@@ -526,13 +468,8 @@ class AmoIntegr(object):
                 params_to_pass[key] = value
             else:
                 message = 'Param <%s> is incorrect' % key
-                raise AmoException(message, {
-                    'user' : self.user.user.username, 
-                    'config' : self.user.config,
-                    'cache' : self.user.cache,
-                    'fields_cache' : self.user.fields_cache,
-                    'last_user_cache' : self.user.last_user_cache
-                })
+                context = self.generate_context()
+                raise AmoException(message, context)
          
         if not call:
             return params_to_pass
@@ -562,13 +499,8 @@ class AmoIntegr(object):
                 if t['id'] == task_type or t['name'] == task_type]
             if not task_types:
                 message = 'Unknown task_type <%s>' % task_type
-                raise AmoException(message, {
-                    'user' : self.user.user.username, 
-                    'config' : self.user.config,
-                    'cache' : self.user.cache,
-                    'fields_cache' : self.user.fields_cache,
-                    'last_user_cache' : self.user.last_user_cache
-                }) 
+                context = self.generate_context()
+                raise AmoException(message, context) 
             
             task_type = task_types[0]
                 
@@ -579,13 +511,8 @@ class AmoIntegr(object):
                 params_to_pass[key] = value
             elif not key in ['task_type']:
                 message = 'Param <%s> is incorrect' % key
-                raise AmoException(message, {
-                    'user' : self.user.user.username, 
-                    'config' : self.user.config,
-                    'cache' : self.user.cache,
-                    'fields_cache' : self.user.fields_cache,
-                    'last_user_cache' : self.user.last_user_cache
-                })
+                context = self.generate_context()
+                raise AmoException(message, context)
         
         if not call:
             return params_to_pass
@@ -612,13 +539,8 @@ class AmoIntegr(object):
                 params_to_pass['filter[id][]'] = kwargs['id']
             else:
                 message = 'Param <%s> is incorrect' % key
-                raise AmoException(message, {
-                    'user' : self.user.user.username, 
-                    'config' : self.user.config,
-                    'cache' : self.user.cache,
-                    'fields_cache' : self.user.fields_cache,
-                    'last_user_cache' : self.user.last_user_cache
-                })
+                context = self.generate_context()
+                raise AmoException(message, context)
         
         response = self.call('api/v2/customers', 'GET', params_to_pass)
         
@@ -632,23 +554,12 @@ class AmoIntegr(object):
     def unite_entities(self, entity_type, first_entity, second_entity):
         if not entity_type in entity_optional_params:
             message = 'Unknown entity type <%s>' % entity_type
-            raise AmoException(message, {
-                'response' : response, 
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            })
+            context = self.generate_context()
+            raise AmoException(message, context)
             
         if not isinstance(first_entity, list) or not isinstance(second_entity, list):
-            raise AmoException('Waiting list as an entity!', {
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            })
+            context = self.generate_context()
+            raise AmoException('Waiting list as an entity!', context)
         
         self.update_cache()
         fields_cache = self.user.fields_cache
@@ -659,13 +570,8 @@ class AmoIntegr(object):
             
             if not first_entity_id in fields_cache[entity_type]:
                 message = 'Unknown field id <%s>' % first_entity_id
-                raise AmoException(message, {
-                    'user' : self.user.user.username, 
-                    'config' : self.user.config,
-                    'cache' : self.user.cache,
-                    'fields_cache' : self.user.fields_cache,
-                    'last_user_cache' : self.user.last_user_cache
-                })
+                context = self.generate_context()
+                raise AmoException(message, context)
             
             cached_field = fields_cache[entity_type][first_entity_id]
             
@@ -709,13 +615,8 @@ class AmoIntegr(object):
 
         if not entity_type in entity_optional_params:
             message = 'Unknown entity type <%s>' % entity_type
-            raise AmoException(message, {
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            })
+            context = self.generate_context()
+            raise AmoException(message, context)
         
         duplicates = []
         self.update_cache()
@@ -724,24 +625,21 @@ class AmoIntegr(object):
         for field in fields_to_find_duplicates:
             if not field in fields_cache:
                 message = 'Field <%s> is incorrect' % field
-                raise AmoException(message, {
-                    'user' : self.user.user.username, 
-                    'config' : self.user.config,
-                    'cache' : self.user.cache,
-                    'fields_cache' : self.user.fields_cache,
-                    'last_user_cache' : self.user.last_user_cache
-                })
+                context = self.generate_context()
+                raise AmoException(message, context)
+                
             if field in entity:
-                if not type(entity[field]) is list:
-                    entity[field] = [entity[field],]
+                entity_field_values = entity[field]
+                if not type(entity_field_values) is list:
+                    entity_field_values = [entity_field_values,]
                 
                 if not fields_cache[field]['is_multiple']:
-                    for entity_field in entity[field]:
+                    for entity_field in entity_field_values:
                         duplicates += self.get_entity(entity_type, 
                             query=entity_field)['_embedded']['items']
                         
                 else:
-                    for entity_field in entity[field]:
+                    for entity_field in entity_field_values:
                         for enum in fields_cache[field]['enums']:
                             enum_name = fields_cache[field]['enums'][enum]
                             
@@ -837,25 +735,14 @@ class AmoIntegr(object):
     """
     def send_order_data(self, lead_data={}, contact_data={}, company_data={}, form=None, \
         generate_tasks_for_rec=False, department_id=-1, **kwargs):
-            
         if not lead_data and not contact_data and not company_data:
-            raise AmoException('Please send some data!', {
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            })
+            context = self.generate_context()
+            raise AmoException('Please send some data!', context)
             
         if generate_tasks_for_rec and (not 'rec_lead_task_text' in kwargs or
             not 'time_to_complete_rec_task' in kwargs):
-            raise AmoException('Kwarg params are needed to generate rec tasks!', {
-                'user' : self.user.user.username, 
-                'config' : self.user.config,
-                'cache' : self.user.cache,
-                'fields_cache' : self.user.fields_cache,
-                'last_user_cache' : self.user.last_user_cache
-            })
+            context = self.generate_context()
+            raise AmoException('Kwarg params are needed to generate rec tasks!', context)
         
         self.update_cache()            
         contact_duplicates = []
@@ -868,12 +755,12 @@ class AmoIntegr(object):
             if company_data and 'companies' in kwargs['fields_to_check_dups']:
                 company_duplicates += self.find_duplicates(company_data['custom_fields'], 
                     'companies', kwargs['fields_to_check_dups']['companies'], **kwargs)
-        
+
         if contact_duplicates:
             responsible_user_id = contact_duplicates[0]['responsible_user_id']
         elif company_duplicates:
             responsible_user_id = company_duplicates[0]['responsible_user_id']
-        elif 'responsible_user_id' in kwargs:
+        elif 'responsible_user_id' in kwargs and kwargs['responsible_user_id'] != one_by_one:
             responsible_user_id = kwargs['responsible_user_id']
         else:
             if 'distribution_settings' in kwargs and kwargs['distribution_settings']:
@@ -969,9 +856,9 @@ class AmoIntegr(object):
             if not not_closed_leads and not not_closed_customers:
                 internal_kwargs = {}
                 if contact_data:
-                     internal_kwargs['contacts_id'] = [contact_id]
+                    internal_kwargs['contacts_id'] = [contact_id]
                 if company_data:
-                     internal_kwargs['company_id'] = [company_id]
+                    internal_kwargs['company_id'] = company_id
                      
                 if 'pipelines' in kwargs:
                     if self.get_succes_leads(contact_duplicates) or self.get_succes_leads(company_duplicates):
@@ -997,16 +884,18 @@ class AmoIntegr(object):
                 # Already check kwargs to contain these keys
                 if not_closed_leads:
                     element_id = not_closed_leads[0]['id']
+                    responsible_user_id = not_closed_leads[0]['responsible_user_id']
                     element_type = 'leads'
                 else:
                     element_id = not_closed_customers[0]['id']
+                    responsible_user_id = not_closed_customers[0]['responsible_user_id']
                     element_type = 'customers'
                     
                 self.add_task(
                     element_id = element_id,
                     element_type = element_type,
                     task_type = 'Звонок',
-                    responsible_user_id = not_closed_customers[0]['responsible_user_id'],
+                    responsible_user_id = responsible_user_id,
                     text = kwargs['rec_lead_task_text'],
                     complete_till_at = time.time()+kwargs['time_to_complete_rec_task']
                 )

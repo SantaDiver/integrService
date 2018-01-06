@@ -16,6 +16,19 @@ def _createHash():
     
 def get_default_user():
     return User.objects.get(id=1)
+    
+def get_default_config():
+    return {
+        'cache_ttl' : 300,
+        'user' : '',
+        'subdomain' : '',
+        'hash' : ''
+    }
+
+def get_default_rights():
+    return {
+        'paid_till' : time.time()
+    }
 
 # Create your models here.
 
@@ -27,8 +40,8 @@ class UserConfig(models.Model):
     
     user = models.OneToOneField(User, default=get_default_user)
     
-    config = JSONField(default={}, blank=True)
-    account_rights = JSONField(default={}, blank=True)
+    config = JSONField(default=get_default_config(), blank=True)
+    account_rights = JSONField(default=get_default_rights(), blank=True)
     cache = JSONField(default={}, blank=True)
     fields_cache = JSONField(default={}, blank=True)
     last_user_cache = JSONField(default={}, blank=True)
