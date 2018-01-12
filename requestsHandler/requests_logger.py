@@ -70,7 +70,7 @@ def log_request(message_type):
             result = func(request)
             
             # After function
-            log_info('Request successfully handled!\n', username, at, {})
+            log_info('Request successfully handled!', username, at, {})
             
             return result
         return func_wrapper

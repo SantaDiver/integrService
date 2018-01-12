@@ -25,13 +25,18 @@ retry_coef = 60
 @task()
 def send_data_to_amo(username, post_data, get_data):
     try:
-        user_cfg = get_object_or_404(UserConfig, public_hash=get_data['public_hash'])
+        try:
+            user_cfg = UserConfig.objects.get(public_hash=get_data['public_hash'])
+        except UserConfig.DoesNotExist:
+            log_error('User cfg was not found!', '__no_name__', get_current_function(), post_data)
+            return
+ 
         log_info('Got data ', user_cfg.user.username, get_current_function(), post_data)
         
         if not user_cfg.user.is_active:
             log_info('User is not active ', user_cfg.user.username, \
                 get_current_function(), user_cfg.account_rights)
-            log_error('User is not active! ', user_cfg.user.username, get_current_function(), post_data)
+            log_error('User is not active!', user_cfg.user.username, get_current_function(), post_data)
         
         if not get_data['form'] in user_cfg.config:
             message = 'No form %s in config %s' % (get_data['form'], user_cfg.user.username)
@@ -81,7 +86,7 @@ def send_data_to_amo(username, post_data, get_data):
         
     except AmoException as e:
         context = e.context
-        log_exception('', request.user.username, get_current_function(), context)
+        log_exception('', username, get_current_function(), context)
         send_data_to_amo.retry(exc=e, countdown=retry_coef * send_data_to_amo.request.retries) 
         
 

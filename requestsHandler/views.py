@@ -50,6 +50,12 @@ def siteHandler(request):
     if not 'form' in request.GET:
         return HttpResponseBadRequest('Form field is required')
         
+    # try:
+    #     user_cfg = UserConfig.objects.get(public_hash=request.GET['public_hash'])
+    # except UserConfig.DoesNotExist:
+    #     log_exception('User is not active! ', '__no_name__', get_current_function(), request.POST)
+    #     return HttpResponse('OK')
+    
     send_data_to_amo.delay(request.user.username, request.POST, request.GET)
         
     return HttpResponse('OK')
