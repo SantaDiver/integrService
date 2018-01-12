@@ -46,7 +46,7 @@ class AmoIntegr(object):
 
         if not response.json()['response']['auth']:
             context = self.generate_context()
-            context['response'] = response
+            context['response'] = response.text
             raise AmoException('Auth Failed', context)
             
             
@@ -74,7 +74,7 @@ class AmoIntegr(object):
 
             message = 'Status code is %s' % response.status_code
             context = self.generate_context()
-            context['response'] = response
+            context['response'] = response.text
             raise AmoException(message, context)
         
         if (response.status_code == 204 and response.reason=='No Content'):

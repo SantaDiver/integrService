@@ -5,3 +5,5 @@ myvenv
 /static
 .c9
 *.log
+nohup.out
+*.sqlite

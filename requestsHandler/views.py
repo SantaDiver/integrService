@@ -29,86 +29,30 @@ from utils import one_by_one, zero_department, not_chosen, ening_statuses, weekd
 from utils import get_config_forms
 from requests_logger import log_request, log_exception, log_info, Message_type, \
     get_current_function
+from tasks import send_data_to_amo
     
 # TODO: Dadata city, email check (get it outside the form)
-# TODO: test
 # TODO: Private hash forms
 # TODO: add admin pannel in user interface
 # TODO: rules to process before sending
 # TODO: premade configs
 # TODO: start using React :)
+# TODO: test context passing to sentry
 
 logger = logging.getLogger(__name__)
 
 @csrf_exempt
 def siteHandler(request):
-    try:
-        if request.method != 'POST':
-            return HttpResponseBadRequest('Waiting for POST request')
-        if not 'public_hash' in request.POST:
-            return HttpResponseBadRequest('Public hash field is required')
-        if not 'form' in request.POST:
-            return HttpResponseBadRequest('Form field is required')
+    if request.method != 'POST':
+        return HttpResponseBadRequest('Waiting for POST request')
+    if not 'public_hash' in request.GET:
+        return HttpResponseBadRequest('Public hash field is required')
+    if not 'form' in request.GET:
+        return HttpResponseBadRequest('Form field is required')
         
-        user_cfg = get_object_or_404(UserConfig, public_hash=request.POST['public_hash'])
-        log_info('Got data ', user_cfg.user.username, get_current_function(), request.POST)
+    send_data_to_amo.delay(request.user.username, request.POST, request.GET)
         
-        if not user_cfg.user.is_active:
-            log_info('User is not active ', user_cfg.user.username, \
-                get_current_function(), user_cfg.account_rights)
-            raise Http404('User is not active!')
-        
-        if not request.POST['form'] in user_cfg.config:
-            return HttpResponseNotFound('No form %s in config %s' % \
-                (request.POST['form'], user_cfg.user.username))
-        
-        requested_form = request.POST['form']  
-        api = AmoIntegr(user_cfg)
-        
-        data_to_send, generate_tasks_for_rec, department_id, internal_kwargs = conform_fields(
-            request.POST, user_cfg.config[requested_form], user_cfg.account_rights)
-                
-        if 'distribution_settings' in user_cfg.config[requested_form] and \
-            user_cfg.config[requested_form]['distribution_settings']:
-            internal_kwargs['distribution_settings'] = \
-               user_cfg.config[requested_form]['distribution_settings']
-               
-        if 'another_distribution' in user_cfg.config[requested_form]:
-            another_distribution = user_cfg.config[requested_form]['another_distribution']
-            if another_distribution != not_chosen and another_distribution != requested_form:
-                another_conform = user_cfg.config[another_distribution]
-                department_id = -1
-                if 'department_id' in another_conform and \
-                    another_conform['department_id'] != not_chosen:
-                    department_id = another_conform['department_id']
-                internal_kwargs['responsible_user_id'] = one_by_one
-                if 'responsible_user_id' in another_conform and \
-                    another_conform['responsible_user_id'] != one_by_one:
-                    internal_kwargs['responsible_user_id'] = another_conform['responsible_user_id']
-                internal_kwargs['distribution_settings'] = []
-                if 'distribution_settings' in another_conform and \
-                    another_conform['distribution_settings']:
-                    internal_kwargs['distribution_settings'] = another_conform['distribution_settings']
-                requested_form = another_distribution
-        
-        reslut = api.send_order_data(
-            contact_data = data_to_send['contact_data'], 
-            lead_data = data_to_send['lead_data'], 
-            company_data = data_to_send['company_data'], 
-            form = requested_form,
-            department_id = department_id, 
-            generate_tasks_for_rec = generate_tasks_for_rec,
-            **internal_kwargs
-        )    
-                  
-        user_cfg.save()
-        
-        return HttpResponse('OK')
-        
-    except AmoException as e:
-        context = e.context
-        log_exception(request.user.username, context)
-        return HttpResponseBadRequest()
+    return HttpResponse('OK')
 
 @login_required
 @log_request(Message_type.INBOUND)
@@ -130,7 +74,7 @@ def configurator(request):
             
     except AmoException as e:
         context = e.context
-        log_exception(request.user.username, context)
+        log_exception('', request.user.username, get_current_function(), context)
         return HttpResponseBadRequest()
     
 
@@ -255,7 +199,7 @@ def setConfig(request):
         
     except AmoException as e:
         context = e.context
-        log_exception(request.user.username, context)
+        log_exception('', request.user.username, get_current_function(), context)
         return HttpResponseBadRequest()
     
 @login_required 
@@ -380,7 +324,7 @@ def getConfig(request):
         
     except AmoException as e:
         context = e.context
-        log_exception(request.user.username, context)
+        log_exception('', request.user.username, get_current_function(), context)
         return HttpResponseBadRequest()
     
 def login_user(request):
@@ -423,7 +367,7 @@ def newForm(request):
     
     except AmoException as e:
         context = e.context
-        log_exception(request.user.username, context)
+        log_exception('', request.user.username, get_current_function(), context)
         return HttpResponseBadRequest()
     
 @login_required
@@ -450,7 +394,7 @@ def deleteForm(request):
     
     except AmoException as e:
         context = e.context
-        log_exception(request.user.username, context)
+        log_exception('', request.user.username, get_current_function(), context)
         return HttpResponseBadRequest()
     
 @login_required
@@ -463,7 +407,7 @@ def test(request):
     
     except AmoException as e:
         context = e.context
-        log_exception(request.user.username, context)
+        log_exception('', request.user.username, get_current_function(), context)
     
     # api.add_entity('there', 'wow',2, {})
     return HttpResponse(200)

@@ -96,7 +96,8 @@ function formSchema(config){
         'format': 'table',
         'propertyOrder': 12,
         'description': 'Внимание! Изменяя это поле, вы сбросите счетчик лидов!<br> \
-        В распределении будут участвовать только люди из выбранного отдела (если выбран)',
+        В распределении будут участвовать только люди из выбранного отдела (если выбран)<br>\
+        (Если оставить пустым, применяться не будет)',
         'title': 'Список людей, на которых распределяются сделки',
         'uniqueItems': true,
         'items': {
@@ -105,13 +106,16 @@ function formSchema(config){
           'uniqueItems': true,
           'properties': {
             'user': {
+              'title': 'Менеджер',
               'type': 'string',
               'enum': config['allowed_users'].slice(0, -1)
             },
             'weight': {
+              'title': 'Вес',
               'type': 'integer'
             },
             'allowed_time' : {
+              'title': 'Рабочее время',
               'type': 'array',
               'options': {
                 'collapsed': false,
@@ -125,13 +129,16 @@ function formSchema(config){
                 'properties': {
                   'week_day': {
                     'type': 'string',
+                    'title': 'День недели',
                     'enum': config['weekdays']
                   },
                   'from': {
+                    'title': 'От',
                     'type': 'string',
                     'format': 'time'
                   },
                   'to': {
+                    'title': 'До',
                     'type': 'string',
                     'format': 'time'
                   }
@@ -385,8 +392,8 @@ $(document).ready(function(){
         });
         
         if (hash != 'accesses') {
-          $('.delete').show();
-          $('.delete').click(function(){
+          $('.delete-form').show();
+          $('.delete-form').click(function(){
             bootbox.confirm({
               message: "Вы дейстивтельно хотите удалить эту форму?",
               buttons: {
