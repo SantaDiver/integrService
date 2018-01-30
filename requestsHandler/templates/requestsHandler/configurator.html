@@ -55,7 +55,7 @@
     <li class="dropdown">
       <a href="/" class="dropdown-toggle" data-toggle="dropdown">Телефония<span class="caret"></span></a>
       <ul class="dropdown-menu" role="menu">
-        {% for conf in config.email %}
+        {% for conf in config.onpbx %}
           <li><a href="/onpbx/{{conf}}">{{conf}}</a></li>
         {% endfor %}
         <li class="divider"></li>

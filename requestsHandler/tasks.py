@@ -22,14 +22,20 @@ from requests_logger import log_request, log_exception, log_info, Message_type, 
     
 retry_coef = 5
 @task(ignore_result=True)
-def send_data_to_amo(username, post_data, get_data, ip=None):
+def send_data_to_amo(post_data, get_data, ip=None):
     try:
         try:
-            user_cfg = UserConfig.objects.get(public_hash=get_data['public_hash'])
+            if 'public_hash' in get_data:
+                user_cfg = UserConfig.objects.get(public_hash=get_data['public_hash'])
+            elif 'private_hash' in get_data:
+                user_cfg = UserConfig.objects.get(private_hash=get_data['private_hash'])
+            else:
+                return
         except UserConfig.DoesNotExist:
             log_error('User cfg was not found!', '__no_name__', get_current_function(), post_data)
             return
- 
+        
+        username = user_cfg.user.username
         log_info('Got data', user_cfg.user.username, get_current_function(), post_data)
         
         if not user_cfg.user.is_active:
@@ -43,6 +49,8 @@ def send_data_to_amo(username, post_data, get_data, ip=None):
         form_type = get_data['form_type']
         
         if not 'form' in get_data or not get_data['form'] in user_cfg.config[form_type]:
+            pprint(get_data['form'])
+            pprint(user_cfg.config[form_type].keys())
             message = 'No form in config %s' % user_cfg.user.username
             raise AmoException(message, {})
         requested_form = get_data['form']

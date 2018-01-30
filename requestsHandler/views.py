@@ -55,10 +55,39 @@ def siteHandler(request):
     get_data = request.GET.copy()
     get_data['form_type'] = 'site_forms'
     ip, is_routable = get_client_ip(request)
-    send_data_to_amo.delay(request.user.username, request.POST, get_data, ip)
-    # send_data_to_amo(request.user.username, request.POST, get_data, ip)
+    send_data_to_amo.delay(request.POST, get_data, ip)
+    
+    # send_data_to_amo(request.POST, get_data, ip)
         
     return HttpResponse('OK')
+
+@csrf_exempt
+def emailHandler(request):
+    if request.method != 'POST':
+        return HttpResponseBadRequest('Waiting for POST request')
+    if not 'private_hash' in request.GET:
+        return HttpResponseBadRequest('Public hash field is required')
+    if not 'form' in request.GET:
+        return HttpResponseBadRequest('Form field is required')
+        
+    get_data = request.GET.copy()
+    get_data['form_type'] = 'email'
+    
+    post_data = request.POST.copy()
+    if 'from' in post_data:
+        splited = post_data['from'].split('<')
+        if len(splited) == 2:
+            name = splited[0]
+            email = splited[1][:-1]
+            
+            post_data['from.name'] = name
+            post_data['from.email'] = email
+        
+    
+    send_data_to_amo(post_data, get_data)
+    
+    return HttpResponse('OK')
+    
 
 @login_required
 @log_request(Message_type.INBOUND)
