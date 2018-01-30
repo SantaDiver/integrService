@@ -12,7 +12,7 @@ import pytz
 from utils import entity_optional_params
 from utils import update_optional_params
 from utils import get_optional_params
-from utils import succes_status, no_form, weekdays
+from utils import succes_status, no_form, weekdays, no_form_type
 from utils import time_in_range
 from utils import one_by_one
 
@@ -47,7 +47,7 @@ class AmoIntegr(object):
         if not response.json()['response']['auth']:
             context = self.generate_context()
             context['response'] = response.text
-            raise AmoException('Auth Failed', context)
+            raise AmoException('Auth Failed', context, True)
             
             
     def call(self, request, request_method, params={}):
@@ -75,7 +75,7 @@ class AmoIntegr(object):
             message = 'Status code is %s' % response.status_code
             context = self.generate_context()
             context['response'] = response.text
-            raise AmoException(message, context)
+            raise AmoException(message, context, True)
         
         if (response.status_code == 204 and response.reason=='No Content'):
             return {
@@ -290,7 +290,10 @@ class AmoIntegr(object):
             
         return response
     
-    def rotate_user(self, department_id, form=None, **kwargs):
+    def rotate_user(self, department_id, form=None, form_type=None, **kwargs):
+        if form and not form_type:
+            context = self.generate_context()
+            raise AmoException('Form type needed!', context)
         if not isinstance(department_id, int):
             context = self.generate_context()
             raise AmoException('Department id should be an integer!', context)
@@ -307,10 +310,14 @@ class AmoIntegr(object):
             
         if not form:
             form = no_form
+        if not form_type:
+            form = no_form_type
         users_cache = self.user.last_user_cache
-        if not form in users_cache:
-            users_cache[form] = {}
-        users_cache = users_cache[form]
+        if not form_type in users_cache:
+            users_cache[form_type] = {}
+        if not form in users_cache[form_type]:
+            users_cache[form_type][form] = {}
+        users_cache = users_cache[form_type][form]
             
         if not '-1' in users_cache:
             users_cache['-1'] = {}
@@ -420,7 +427,7 @@ class AmoIntegr(object):
                     users_cache[user] -= 1
             
         
-        self.user.last_user_cache[form][str(department_id)] = users_cache
+        self.user.last_user_cache[form_type][form][str(department_id)] = users_cache
         
         return next_user_id
     
@@ -612,7 +619,6 @@ class AmoIntegr(object):
     """
     def find_duplicates(self, entity, entity_type, fields_to_find_duplicates, 
         **kwargs):
-
         if not entity_type in entity_optional_params:
             message = 'Unknown entity type <%s>' % entity_type
             context = self.generate_context()
@@ -734,7 +740,7 @@ class AmoIntegr(object):
     
     """
     def send_order_data(self, lead_data={}, contact_data={}, company_data={}, form=None, \
-        generate_tasks_for_rec=False, department_id=-1, **kwargs):
+        form_type=None, generate_tasks_for_rec=False, department_id=-1, **kwargs):
         if not lead_data and not contact_data and not company_data:
             context = self.generate_context()
             raise AmoException('Please send some data!', context)
@@ -742,7 +748,12 @@ class AmoIntegr(object):
         if generate_tasks_for_rec and (not 'rec_lead_task_text' in kwargs or
             not 'time_to_complete_rec_task' in kwargs):
             context = self.generate_context()
-            raise AmoException('Kwarg params are needed to generate rec tasks!', context)
+            raise AmoException('Kwarg params are needed to generate rec tasks!', \
+                context, True)
+            
+        lead_id = None
+        contact_id = None
+        company_id = None
         
         self.update_cache()            
         contact_duplicates = []
@@ -884,6 +895,7 @@ class AmoIntegr(object):
                 # Already check kwargs to contain these keys
                 if not_closed_leads:
                     element_id = not_closed_leads[0]['id']
+                    lead_id = element_id
                     responsible_user_id = not_closed_leads[0]['responsible_user_id']
                     element_type = 'leads'
                 else:
@@ -899,16 +911,12 @@ class AmoIntegr(object):
                     text = kwargs['rec_lead_task_text'],
                     complete_till_at = time.time()+kwargs['time_to_complete_rec_task']
                 )
-            
-                lead_id = element_id
                 
-        data_to_return = {}
-        if lead_data:
-            data_to_return['lead_id'] = lead_id
-        if contact_data:
-            data_to_return['contact_id'] = contact_id
-        if company_data:
-            data_to_return['company_id'] = company_id
+        data_to_return = {
+            'lead_id' : lead_id,
+            'contact_id' : contact_id,
+            'company_id' : company_id
+        }
             
         return data_to_return
         

@@ -29,9 +29,14 @@ $('.addform').click(function(event){
   for (var n in form_data) {
     if (form_data[n]['name'] == 'name') data['name'] = form_data[n]['value'];
   }
+  
+  var path = window.location.pathname;
+  var arrVars = path.split("/");
+  var type = arrVars[1];
+  data['type'] = type;
 
   $.post('/newForm', JSON.stringify(data), function() {
-    window.location.replace('/'+data['name']);
+    window.location.replace('/'+type+'/'+data['name']);
   }, 'json')
     .fail(function() {
       $('.invalid-name').show()

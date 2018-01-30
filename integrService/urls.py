@@ -21,6 +21,7 @@ from django.conf import settings
 from requestsHandler import views as requestsHandler_views
 
 urlpatterns = [
+    url(r'^su/', include('django_su.urls')),
     url(r'^admin/', admin.site.urls),
     url(r'^requestsHandler/', include('requestsHandler.urls')),
     url(r'siteHandler$', requestsHandler_views.siteHandler, name='siteHandler'),
@@ -31,5 +32,5 @@ urlpatterns = [
     url(r'newForm', requestsHandler_views.newForm, name='newForm'),
     url(r'deleteForm', requestsHandler_views.deleteForm, name='deleteForm'),
     url(r'test', requestsHandler_views.test, name='test'),
-    url(r'^\w*$', requestsHandler_views.configurator, name='configurator'),
+    url(r'^\w*/{0,1}\w*$', requestsHandler_views.configurator, name='configurator'),
 ]

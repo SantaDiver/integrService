@@ -8,3 +8,5 @@ raven --upgrade
 django-simple-history
 celery
 sqlalchemy
+django-ipware
+django-su

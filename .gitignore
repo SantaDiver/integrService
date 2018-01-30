@@ -7,3 +7,4 @@ myvenv
 *.log
 nohup.out
 *.sqlite
+*.pid

@@ -36,3 +36,47 @@
             tags=tag,
             created_at = randint(int(time.time() - 360*24*60*60), int(time.time()))
         )
+        
+    # users = list(user_cfg.cache['_embedded']['users'].keys())
+    # pprint(users)
+    
+    # contacts = api.get_entity('contacts', limit_rows=500)['_embedded']['items']
+    # contacts += api.get_entity('contacts', limit_offset=500, limit_rows=500)['_embedded']['items']
+    # ids = [contact['id'] for contact in contacts]
+    # pprint(len(set(ids)))
+    
+    # companies = api.get_entity('companies', limit_rows=500)['_embedded']['items']
+    # companies += api.get_entity('companies', limit_offset=500, limit_rows=500)['_embedded']['items']
+    # ids = [company['id'] for company in companies]
+    # pprint(len(set(ids)))
+    
+    # resp_companies = {}
+    # for company in companies:
+    #     resp_companies[company['id']] = company['responsible_user_id']
+    
+    # for contact in contacts:
+    #     resp_user = contact['responsible_user_id']
+    #     if 'company' in contact and 'id' in contact['company']:
+    #         if resp_companies[contact['company']['id']] != resp_user:
+    #             pprint('Butthurt!')
+    #             pprint(contact['id'])
+
+    # pprint('Done!')
+    
+    # import random
+    # a=0
+    # b=0
+    # for contact in contacts:
+    #     id = str(contact['id'])
+    #     resp_user = str(contact['responsible_user_id'])
+    #     if not resp_user in users:
+    #         resp_user = random.choice(users)
+    #         api.update_entity('contacts', id, responsible_user_id=resp_user)
+    #         a += 1
+        
+    #     if 'company' in contact and 'id' in contact['company']:
+    #         api.update_entity('companies', contact['company']['id'], responsible_user_id=resp_user)
+    #         b+=1 
+    
+    # pprint(a)
+    # pprint(b)

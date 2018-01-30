@@ -48,6 +48,7 @@ def log_request(message_type):
         @wraps(func)
         def func_wrapper(request):
             # Before function
+            
             username = request.user.username
             at = func.__name__
            
@@ -92,8 +93,7 @@ def log_message(message_level, message, username, at, context):
     if message_level == Message_level.EXCEPTION:
         logger.exception('%s %s log_exception at %s ' % (Message_level.EXCEPTION, \
             message, at) + json.dumps(context, indent=2, sort_keys=True, ensure_ascii=False))
-    
-        exception_context = context
+        
         client.captureException() 
         
     elif message_level == Message_level.INFO:
@@ -116,5 +116,8 @@ def log_error(message, username, at, context):
 
 import inspect 
 def get_current_function():
-    return inspect.stack()[1][3]
+    try:
+        return inspect.stack()[1][3]
+    except:
+        return 'not knonwn'
     

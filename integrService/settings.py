@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['amointegr-python-santadiver.c9users.io']
 # Application definition
 
 INSTALLED_APPS = [
+    'django_su',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -131,16 +132,21 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # Adding SNM code after this comment
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'django_su.backends.SuBackend',
+)
+
 LOGIN_URL = '/login'
 LOGOUT_REDIRECT_URL = '/login'
 
-DADATA_KEY = "a25848ba56fb681960880dd73fe6e55849296121"
-DADATA_SECRET = "ad35dc25999cd6b03320be03f24fa14aa144fba8"
+DADATA_KEY = '2ffba1983986a5da48c4b1f3cd906406557cf736'
+DADATA_SECRET = 'ad35dc25999cd6b03320be03f24fa14aa144fba8'
 
-# RAVEN_CONFIG = {
-#     'dsn': 'https://69c151a0975e42f5970c262ef7fa4339:c3fb3b6ba224472da3f1c8018726b91e@sentry.io/264422',
-#     'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
-# }
+RAVEN_CONFIG = {
+    'dsn': 'https://69c151a0975e42f5970c262ef7fa4339:c3fb3b6ba224472da3f1c8018726b91e@sentry.io/264422',
+    'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
+}
 
 LOGGING = {
     'version': 1,
@@ -169,7 +175,6 @@ LOGGING = {
 }
 
 # Celery settings
-
 CELERY_BROKER_URL = 'amqp://guest:guest@localhost//'
 
 #: Only add pickle to this list if your broker is secured

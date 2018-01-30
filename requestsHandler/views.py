@@ -3,6 +3,7 @@ import logging
 import sys
 from pprint import pprint
 import time
+import logging
 
 from django.shortcuts import render
 from django.shortcuts import redirect
@@ -15,29 +16,29 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseNotFound, HttpResponseBadRequest
 from django.http import Http404
 from requestsHandler.models import UserConfig
-import logging
+from django.contrib.auth.models import User
 
 from dadata.plugins.django import DjangoDaDataClient
 from raven.contrib.django.raven_compat.models import client
+from ipware import get_client_ip
 
 sys.path.insert(0, './amoIntegr')
 sys.path.insert(0, './requestsHandler')
 from amoIntegr import AmoIntegr
 from amoException import AmoException
 from conform_fields import conform_fields, find_pipline_id
-from utils import one_by_one, zero_department, not_chosen, ening_statuses, weekdays
-from utils import get_config_forms
+from utils import one_by_one, zero_department, not_chosen, ending_statuses, weekdays
+from utils import get_config_forms, config_types
 from requests_logger import log_request, log_exception, log_info, Message_type, \
     get_current_function
 from tasks import send_data_to_amo
     
-# TODO: Dadata city, email check (get it outside the form)
 # TODO: Private hash forms
-# TODO: add admin pannel in user interface
-# TODO: rules to process before sending
-# TODO: premade configs
-# TODO: start using React :)
+# TODO: JIVOsite and Email
+
 # TODO: test context passing to sentry
+# TODO: russian form names
+# TODO: start using React :)
 
 logger = logging.getLogger(__name__)
 
@@ -49,14 +50,12 @@ def siteHandler(request):
         return HttpResponseBadRequest('Public hash field is required')
     if not 'form' in request.GET:
         return HttpResponseBadRequest('Form field is required')
-        
-    # try:
-    #     user_cfg = UserConfig.objects.get(public_hash=request.GET['public_hash'])
-    # except UserConfig.DoesNotExist:
-    #     log_exception('User is not active! ', '__no_name__', get_current_function(), request.POST)
-    #     return HttpResponse('OK')
     
-    send_data_to_amo.delay(request.user.username, request.POST, request.GET)
+    get_data = request.GET
+    get_data['form_type'] = 'site_forms'
+    ip, is_routable = get_client_ip(request)
+    send_data_to_amo.delay(request.user.username, request.POST, get_data, ip)
+    # send_data_to_amo(request.user.username, request.POST, request.GET, ip)
         
     return HttpResponse('OK')
 
@@ -67,12 +66,24 @@ def configurator(request):
         user_cfg = get_object_or_404(UserConfig, user=request.user)
         config = user_cfg.config
         
-        config_names = get_config_forms(config)
+        request_path = request.path[1:]
         
-        if not request.path[1:] or request.path[1:] in config or \
-            request.path[1:] in ['add_form', 'accesses']:
+        valid_path = False
+        if not request_path:
+            valid_path = True
+        elif request_path == 'accesses':
+            valid_path = True
+        else:
+            splited_path = request_path.split('/')
+            if len(splited_path) == 2:
+                if splited_path[0] in config and splited_path[1] in config[splited_path[0]]:
+                    valid_path = True
+                elif splited_path[0] in config and splited_path[1] == 'add_form':
+                    valid_path = True
+                
+        if valid_path:
             return render(request, 'requestsHandler/configurator.html', {
-                'config_names':config_names, 
+                'config':config, 
                 'username': user_cfg.user.username
             })
         else:
@@ -93,9 +104,11 @@ def setConfig(request):
             
         got_config = json.loads(request.body.decode('utf-8'))
         if not 'form' in got_config:
-            return HttpResponseNotFound('Form field is required')
+            return HttpResponseBadRequest('Form field is required')
         
         user_cfg = get_object_or_404(UserConfig, user=request.user)
+        config = user_cfg.config
+        
         log_info('Config before updateing', user_cfg.user.username, get_current_function(), user_cfg.config)
         
         first_lvl_data = ['user', 'subdomain', 'hash']
@@ -103,40 +116,37 @@ def setConfig(request):
             if field in got_config:
                 if field == 'time_to_complete_rec_task':
                     got_config[field] *= 60
-                user_cfg.config[field] = got_config[field]
+                config[field] = got_config[field]
                 
         if got_config['form'] == 'accesses':
             user_cfg.save()
             return HttpResponse(200)
         
-        if not got_config['form'] in user_cfg.config:
+        if not 'config_type' in got_config or not got_config['config_type'] in \
+            config or not got_config['form'] in config[got_config['config_type']]:
             return HttpResponseNotFound('No form %s in config %s' % \
                 (got_config['form'], user_cfg.user.username))
                 
         form = got_config['form']
+        config_type = got_config['config_type']
+        settings = config[config_type][form]
         
-        if not 'fields_to_check_dups' in user_cfg.config[form]:
-            user_cfg.config[form]['fields_to_check_dups'] = {}
+        if not 'fields_to_check_dups' in settings:
+            settings['fields_to_check_dups'] = {}
         if 'contact_fields_to_check_dups' in got_config:
-            user_cfg.config[form]['fields_to_check_dups']['contacts'] = \
+            settings['fields_to_check_dups']['contacts'] = \
                 [field['field'] for field in got_config['contact_fields_to_check_dups']]
         if 'company_fields_to_check_dups' in got_config:
-            user_cfg.config[form]['fields_to_check_dups']['companies'] = \
+            settings['fields_to_check_dups']['companies'] = \
                 [field['field'] for field in got_config['company_fields_to_check_dups']]
         
-        additional_params = ['rec_lead_task_text', 'time_to_complete_rec_task', 'another_distribution']
+        additional_params = ['rec_lead_task_text', 'time_to_complete_rec_task', \
+            'another_distribution', 'generate_tasks_for_rec', 'tag_for_rec']
         for param in additional_params:
             if param in got_config:
                 if param == 'time_to_complete_rec_task':
                     got_config[param] *= 60
-                user_cfg.config[form][param] =  got_config[param]
-                
-        if 'generate_tasks_for_rec' in got_config:
-            user_cfg.config[form]['generate_tasks_for_rec'] = \
-                got_config['generate_tasks_for_rec']
-        if 'tag_for_rec' in got_config:
-             user_cfg.config[form]['tag_for_rec'] = \
-                got_config['tag_for_rec']
+                settings[param] = got_config[param]
                 
         if '_embedded' in user_cfg.cache:
             if 'distribution_settings' in got_config:
@@ -145,59 +155,57 @@ def setConfig(request):
                         ['_embedded']['users'].items() if user['name'] == distr_settings['user']), None)
                     got_config['distribution_settings'][idx]['user'] = distr_user_id
                 
-                if not 'distribution_settings' in user_cfg.config[form]:
-                     user_cfg.config[form]['distribution_settings'] = \
-                        got_config['distribution_settings']
+                if not 'distribution_settings' in settings:
+                    settings['distribution_settings'] = got_config['distribution_settings']
                 else:
-                    pairs = zip(user_cfg.config[form]['distribution_settings'], \
-                        got_config['distribution_settings'])
+                    pairs = zip(settings['distribution_settings'], got_config['distribution_settings'])
                     if any(x != y for x, y in pairs):
                         user_cfg.last_user_cache[form] = {}
-                    user_cfg.config[form]['distribution_settings'] = got_config['distribution_settings']
+                    settings['distribution_settings'] = got_config['distribution_settings']
             
             if 'responsible_user' in got_config:
                 if got_config['responsible_user'] == one_by_one:
-                    user_cfg.config[form]['responsible_user_id'] = one_by_one
+                    settings['responsible_user_id'] = one_by_one
                 else:
                     for user_id, user in user_cfg.cache['_embedded']['users'].items():
                         if user['name'] == got_config['responsible_user']:
-                             user_cfg.config[form]['responsible_user_id'] = user_id
+                             settings['responsible_user_id'] = user_id
                              
             if 'department' in got_config:
                 if got_config['department'] == zero_department:
-                    user_cfg.config[form]['department_id'] = 0
+                    settings['department_id'] = 0
                 elif got_config['department'] == not_chosen:
-                    user_cfg.config[form]['department_id'] = not_chosen
+                    settings['department_id'] = not_chosen
                 else:
                     for group_id, group in user_cfg.cache['_embedded']['groups'].items():
                         if group['name'] == got_config['department']:
-                             user_cfg.config[form]['department_id'] = int(group_id)
+                             settings['department_id'] = int(group_id)
             
-            if not 'pipelines' in user_cfg.config[form]:
-                user_cfg.config[form]['pipelines'] = {}
+            if not 'pipelines' in settings:
+                settings['pipelines'] = {}
             if 'status_for_new' in got_config:
-                user_cfg.config[form]['pipelines']['status_for_new'] = \
+                settings['pipelines']['status_for_new'] = \
                     find_pipline_id(user_cfg.cache['_embedded']['pipelines'], got_config['status_for_new'])
             if 'status_for_rec' in got_config:
-                user_cfg.config[form]['pipelines']['status_for_rec'] = \
+                settings['pipelines']['status_for_rec'] = \
                     find_pipline_id(user_cfg.cache['_embedded']['pipelines'], got_config['status_for_rec'])
                     
             if 'contact_fields' in got_config:
-                user_cfg.config[form]['contact_data'] = {}
+                settings['contact_data'] = {}
                 for field in got_config['contact_fields']:
-                    user_cfg.config[form]['contact_data'][field['amoCRM']] = field['site']
+                    settings['contact_data'][field['amoCRM']] = field['site']
                     
             if 'company_fields' in got_config:
-                user_cfg.config[form]['company_data'] = {}
+                settings['company_data'] = {}
                 for field in got_config['company_fields']:
-                    user_cfg.config[form]['company_data'][field['amoCRM']] = field['site']
+                    settings['company_data'][field['amoCRM']] = field['site']
                     
             if 'lead_fields' in got_config:
-                user_cfg.config[form]['lead_data'] = {}
+                settings['lead_data'] = {}
                 for field in got_config['lead_fields']:
-                    user_cfg.config[form]['lead_data'][field['amoCRM']] = field['site']
+                    settings['lead_data'][field['amoCRM']] = field['site']
                 
-            
+                
         user_cfg.save()
         
         log_info('Updated config', user_cfg.user.username, get_current_function(), user_cfg.config)
@@ -216,114 +224,123 @@ def getConfig(request):
             return HttpResponseBadRequest('Waiting for GET request')
         if not 'hash' in request.GET:
             return HttpResponseBadRequest('Hash parameter needed!')
+        if not 'form_type' in request.GET:
+            return HttpResponseBadRequest('Form type parameter needed!')
             
         requested_form = request.GET['hash']
+        form_type = request.GET['form_type']
         
         user_cfg = get_object_or_404(UserConfig, user=request.user)
+        
         config = user_cfg.config
-        
-        if not requested_form in config and requested_form != 'accesses':
-            log_info('Response', user_cfg.user.username, get_current_function(), config)
-            return HttpResponseNotFound('No form %s in config %s' % \
-                (requested_form, user_cfg.user.username))
-        
-        config['forms'] = get_config_forms(config)
-        config['forms'].append(not_chosen)
-        
-        config['valid_amo'] = True
-        
         try:
             api = AmoIntegr(user_cfg)
-            api.force_to_update_cache()
+            api.update_cache()
+            user_cfg.save()
+            config['valid_amo'] = True
         except AmoException as e:
             config['valid_amo'] = False
         
-        def RepresentsInt(s):
-            try: 
-                int(s)
-                return True
-            except ValueError:
-                return False
+        if requested_form != 'accesses':
+            if not form_type in config:
+                return HttpResponseNotFound('No type %s in config %s' % \
+                    (form_type, user_cfg.user.username))
+            if not requested_form in config[form_type]:
+                return HttpResponseNotFound('No form %s in config %s' % \
+                    (requested_form, user_cfg.user.username))
+        
+        if '_embedded' in user_cfg.cache and requested_form != 'accesses':
+            config['forms'] = list(config[form_type].keys())
+            config['forms'].append(not_chosen)
+            settings = config[form_type][requested_form]
             
-        config['allowed_fields'] = {}
-        config['allowed_statuses'] = []
-        if '_embedded' in user_cfg.cache and requested_form in config:
-            if not 'fields_to_check_dups' in config[requested_form]:
-                config[requested_form]['fields_to_check_dups'] = {}
+            def RepresentsInt(s):
+                try: 
+                    int(s)
+                    return True
+                except ValueError:
+                    return False
+                
+            config['allowed_fields'] = {}
+            config['allowed_statuses'] = []
             
-            contact_field_options = [field for field in user_cfg.fields_cache['contacts'] if not RepresentsInt(field)]
-            contact_field_options += ['name', 'default_name', 'tags']
+            if not 'fields_to_check_dups' in settings:
+                settings['fields_to_check_dups'] = {}
             
-            company_field_options = [field for field in user_cfg.fields_cache['companies'] if not RepresentsInt(field)]
-            company_field_options += ['name', 'default_name', 'tags']
+            additional_field_options = ['name', 'default_name', 'tags']
+            contact_field_options = [field for field in user_cfg.fields_cache \
+                ['contacts'] if not RepresentsInt(field)]
+            contact_field_options += additional_field_options
             
-            lead_field_options = [field for field in user_cfg.fields_cache['leads'] if not RepresentsInt(field)]
-            lead_field_options += ['name', 'default_name', 'tags']
+            company_field_options = [field for field in user_cfg.fields_cache \
+                ['companies'] if not RepresentsInt(field)]
+            company_field_options += additional_field_options
             
-            config = user_cfg.config
+            lead_field_options = [field for field in user_cfg.fields_cache \
+                ['leads'] if not RepresentsInt(field)]
+            lead_field_options += additional_field_options
+            
             config['allowed_fields'] = {
                 'contacts' : contact_field_options,
                 'companies' : company_field_options,
                 'leads' : lead_field_options
             }
             
-            config['allowed_users'] = [user['name'] for user_id, user in 
-                user_cfg.cache['_embedded']['users'].items() if not user['is_free'] and user['is_active']]
+            config['allowed_users'] = [user['name'] for user_id, user in \
+                user_cfg.cache['_embedded']['users'].items() if not user['is_free'] \
+                and user['is_active']]
             config['allowed_users'].append(one_by_one)
             
             for pipeline_id, pipeline in user_cfg.cache['_embedded']['pipelines'].items():
                 for status_id, status in pipeline['statuses'].items():
-                    config['allowed_statuses'].append(pipeline['name']+'/'+status['name'])
+                    if not int(status_id) in ending_statuses:
+                        config['allowed_statuses'].append(pipeline['name']+'/'+status['name'])
             
-            if 'responsible_user_id' in config[requested_form] and \
-                config[requested_form]['responsible_user_id'] != one_by_one:
+            if 'responsible_user_id' in settings and settings['responsible_user_id'] != one_by_one:
                 config['default_user'] = [user['name'] for user_id, user in 
                     user_cfg.cache['_embedded']['users'].items() if 
-                    int(user_id) == int(config[requested_form]['responsible_user_id'])][0]
+                    int(user_id) == int(settings['responsible_user_id'])][0]
             else:
                 config['default_user'] = one_by_one
                 
-            config['allowed_departments'] = [group['name'] for group_id, group in 
-                user_cfg.cache['_embedded']['groups'].items()]
+            if user_cfg.cache['_embedded']['groups']:
+                config['allowed_departments'] = [group['name'] for group_id, group in 
+                    user_cfg.cache['_embedded']['groups'].items()]
+            else:
+                config['allowed_departments'] = []
             config['allowed_departments'].append(zero_department)
             config['allowed_departments'].append(not_chosen)
             
             config['default_department'] = not_chosen
-            if 'department_id' in config[requested_form]:
-                if config[requested_form]['department_id'] != 0 and \
-                    config[requested_form]['department_id'] != not_chosen:
+            if 'department_id' in settings:
+                if settings['department_id'] != 0 and settings['department_id'] != not_chosen:
                     config['default_department'] = [group['name'] for group_id, group in 
                     user_cfg.cache['_embedded']['groups'].items() if 
-                        int(group_id) == int(config[requested_form]['department_id'])][0]
-                elif config[requested_form]['department_id'] == 0:
+                        int(group_id) == int(settings['department_id'])][0]
+                elif settings['department_id'] == 0:
                     config['default_department'] = zero_department
                 
-            if 'pipelines' in config[requested_form]:
+            if 'pipelines' in settings:
                 for pipeline_id, pipeline in user_cfg.cache['_embedded']['pipelines'].items():
                     for status_id, status in pipeline['statuses'].items():
-                        if 'status_for_new' in config[requested_form]['pipelines'] and \
-                            int(status_id) == int(config[requested_form]['pipelines']['status_for_new']):
+                        if 'status_for_new' in settings['pipelines'] and \
+                            int(status_id) == int(settings['pipelines']['status_for_new']):
                             
-                            if not int(status_id) in ening_statuses:
-                                config['status_for_new'] = pipeline['name']+'/'+status['name']
-                            else:
-                                config['status_for_new'] = status['name']
+                            config['status_for_new'] = pipeline['name']+'/'+status['name']
                                 
-                        if 'status_for_rec' in config[requested_form]['pipelines'] and \
-                            int(status_id) == int(config[requested_form]['pipelines']['status_for_rec']):
+                        if 'status_for_rec' in settings['pipelines'] and \
+                            int(status_id) == int(settings['pipelines']['status_for_rec']):
                                 
-                            if not int(status_id) in ening_statuses:
-                                config['status_for_rec'] = pipeline['name']+'/'+status['name']
-                            else:
-                                config['status_for_rec'] = status['name']
+                            config['status_for_rec'] = pipeline['name']+'/'+status['name']
                                 
-            if 'distribution_settings' in config[requested_form]:
-                for idx, distr_settings in enumerate(config[requested_form]['distribution_settings']):
+            if 'distribution_settings' in settings:
+                for idx, distr_settings in enumerate(settings['distribution_settings']):
                     distr_user_name = next((user['name'] for user_id, user in user_cfg.cache \
                         ['_embedded']['users'].items() if user_id == distr_settings['user']), None)
-                    config[requested_form]['distribution_settings'][idx]['user'] = distr_user_name
+                    settings['distribution_settings'][idx]['user'] = distr_user_name
                     
             config['weekdays'] = weekdays
+            config['form_type'] = form_type
         
         log_info('Response', user_cfg.user.username, get_current_function(), config)
         return HttpResponse(json.dumps(config, sort_keys=True, ensure_ascii=False))
@@ -356,13 +373,22 @@ def newForm(request):
             return HttpResponseBadRequest('Waiting for POST request')
         
         got_data = json.loads(request.body.decode('utf-8'))
+        
         if not 'name' in got_data:
             return HttpResponseBadRequest('name is needed')
+        if not 'type' in got_data or not got_data['type'] in config_types:
+            return HttpResponseBadRequest('bad type')
             
         user_cfg = get_object_or_404(UserConfig, user=request.user)
+        config = user_cfg.config
         
-        if got_data['name'] and not got_data['name'] in user_cfg.config:
-            user_cfg.config[got_data['name']] = {}
+        name = got_data['name']
+        form_type = got_data['type']
+        
+        if name and not name in get_config_forms(config):
+            config[form_type][name] = {}
+            if config_types[form_type]:
+                config[form_type][name]['allowed_enum'] = config_types[form_type]
         else:
             return HttpResponseBadRequest()
             
@@ -386,12 +412,20 @@ def deleteForm(request):
         got_data = json.loads(request.body.decode('utf-8'))
         if not 'name' in got_data:
             return HttpResponseBadRequest('name is needed')
+        if not 'type' in got_data or not got_data['type'] in config_types:
+            return HttpResponseBadRequest('bad type')
             
         user_cfg = get_object_or_404(UserConfig, user=request.user)
+        config = user_cfg.config
         
-        if got_data['name'] and got_data['name'] in user_cfg.config:
-            user_cfg.config.pop(got_data['name'], None)
-            user_cfg.last_user_cache.pop(got_data['name'], None)
+        name = got_data['name']
+        form_type = got_data['type']
+        
+        if name and name in config[form_type]:
+            config[form_type].pop(name, None)
+            luser = user_cfg.last_user_cache
+            if form_type in luser and name in luser[form_type]:
+                luser[form_type].pop(name, None)
             
         user_cfg.save()
         
@@ -403,18 +437,11 @@ def deleteForm(request):
         log_exception('', request.user.username, get_current_function(), context)
         return HttpResponseBadRequest()
     
-@login_required
-@log_request(Message_type.INBOUND)
+# @login_required
+# @log_request(Message_type.INBOUND)
 def test(request):
-    try:
-        user_cfg = get_object_or_404(UserConfig, user=request.user)
-        api = AmoIntegr(user_cfg)
-        api.add_entity('here', 'wow',2, {})
-    
-    except AmoException as e:
-        context = e.context
-        log_exception('', request.user.username, get_current_function(), context)
-    
-    # api.add_entity('there', 'wow',2, {})
+    # user_cfg = get_object_or_404(UserConfig, user=request.user)
+    # api = AmoIntegr(user_cfg)
+
     return HttpResponse(200)
     

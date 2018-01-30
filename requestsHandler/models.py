@@ -20,9 +20,15 @@ def get_default_user():
 def get_default_config():
     return {
         'cache_ttl' : 300,
-        'user' : '',
-        'subdomain' : '',
-        'hash' : ''
+        'user' : 'user',
+        'subdomain' : 'subdomain',
+        'hash' : 'hash',
+        'site-forms' : {
+            
+        },
+        'jivo_site' : {
+            'allowed_enum' : []
+        }
     }
 
 def get_default_rights():

@@ -38,7 +38,7 @@ def time_in_range(now, start, end):
         return end <= now <= start
         
 config_types = {
-    'site_forms' : [], 
+    'site_forms' : {}, 
     'jivo_site' : [], 
     'onpbx' : [], 
     'email' : []
@@ -54,7 +54,7 @@ def get_config_forms(config):
 one_by_one = 'По очереди'
 zero_department = 'Отдел продаж'
 not_chosen = 'Не выбрано'
-ending_statuses = [142, 143]
+ening_statuses = [142, 143]
 succes_status = 142
 no_form = 'no_form'
 no_form_type = 'no_type'

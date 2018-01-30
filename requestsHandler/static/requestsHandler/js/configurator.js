@@ -275,7 +275,7 @@ function formSchema(config){
 $(document).ready(function(){
 
   function loadConfig(hash) {
-    $.get('/getConfig', {'hash':hash}, function( data ) {
+    $.get('/getConfig', {'hash':hash, 'form_type':type}, function( data ) {
         var config = JSON.parse(data);
         if (!config['valid_amo']) {
           // alert('Неверные данные для входа в amoCRM!');
@@ -285,7 +285,19 @@ $(document).ready(function(){
         
         $('.send').show();
         if (hash == 'accesses') var schema = accessesSchema(config);
-        else var schema = formSchema(config);
+        else {
+          var schema = formSchema(config);
+
+          // Set enum for schema
+          if (config[type][hash]['allowed_enum']) {
+            var typesArray = ['contact_fields', 'company_fields', 'lead_fields'];
+            var arrayLength = typesArray.length;
+            for (var i = 0; i < arrayLength; i++) {
+              schema['properties'][typesArray[i]]['items']['properties']['site']['enum'] = 
+                config[type][hash]['allowed_enum'];
+            }
+          }
+        }
     
         // Set default options
         JSONEditor.defaults.options.theme = 'bootstrap3';
@@ -304,38 +316,38 @@ $(document).ready(function(){
           });
         } else {
           var contact_fields = new Array();
-          for (var field in config[hash]['contact_data']) {
+          for (var field in config[type][hash]['contact_data']) {
             contact_fields.push({
               'amoCRM' : field,
-              'site' : config[hash]['contact_data'][field]
+              'site' : config[type][hash]['contact_data'][field]
             });
           }
           var contact_fields_to_check_dups = new Array();
-          for (var field in config[hash]['fields_to_check_dups']['contacts']) {
+          for (var field in config[type][hash]['fields_to_check_dups']['contacts']) {
             contact_fields_to_check_dups.push({
-              'field' : config[hash]['fields_to_check_dups']['contacts'][field],
+              'field' : config[type][hash]['fields_to_check_dups']['contacts'][field],
             });
           }
           
           var company_fields = new Array();
-          for (var field in config[hash]['company_data']) {
+          for (var field in config[type][hash]['company_data']) {
             company_fields.push({
               'amoCRM' : field,
-              'site' : config[hash]['company_data'][field]
+              'site' : config[type][hash]['company_data'][field]
             });
           }
           var company_fields_to_check_dups = new Array();
-          for (var field in config[hash]['fields_to_check_dups']['companies']) {
+          for (var field in config[type][hash]['fields_to_check_dups']['companies']) {
             company_fields_to_check_dups.push({
-              'field' : config[hash]['fields_to_check_dups']['companies'][field],
+              'field' : config[type][hash]['fields_to_check_dups']['companies'][field],
             });
           }
           
           var lead_fields = new Array();
-          for (var field in config[hash]['lead_data']) {
+          for (var field in config[type][hash]['lead_data']) {
             lead_fields.push({
               'amoCRM' : field,
-              'site' : config[hash]['lead_data'][field]
+              'site' : config[type][hash]['lead_data'][field]
             });
           }
           
@@ -344,12 +356,12 @@ $(document).ready(function(){
             'department' : config['default_department'],
             'status_for_new' : config['status_for_new'],
             'status_for_rec' : config['status_for_rec'],
-            'generate_tasks_for_rec' : config[hash]['generate_tasks_for_rec'],
-            'rec_lead_task_text' : config[hash]['rec_lead_task_text'],
-            'time_to_complete_rec_task' : config[hash]['time_to_complete_rec_task']/60,
-            'tag_for_rec' : config[hash]['tag_for_rec'],
-            'another_distribution' : hash,
-            'distribution_settings' : config[hash]['distribution_settings'],
+            'generate_tasks_for_rec' : config[type][hash]['generate_tasks_for_rec'],
+            'rec_lead_task_text' : config[type][hash]['rec_lead_task_text'],
+            'time_to_complete_rec_task' : config[type][hash]['time_to_complete_rec_task']/60,
+            'tag_for_rec' : config[type][hash]['tag_for_rec'],
+            'another_distribution' : config[type][hash]['another_distribution'],
+            'distribution_settings' : config[type][hash]['distribution_settings'],
             
             'contact_fields': contact_fields,
             'contact_fields_to_check_dups' : contact_fields_to_check_dups,
@@ -386,6 +398,7 @@ $(document).ready(function(){
           });
           data = editor.getValue();
           data['form'] = hash;
+          data['config_type'] = type;
           $.post('/setConfig', JSON.stringify(data), function() {
             location.reload();
           }, 'json');
@@ -416,6 +429,7 @@ $(document).ready(function(){
                   });
                   data = {};
                   data['name'] = hash;
+                  data['type'] = type;
                   $.post('/deleteForm', JSON.stringify(data), function() {
                     window.location.replace('/');
                   }, 'json');
@@ -429,10 +443,16 @@ $(document).ready(function(){
     });
   }
 
-  var hash = window.location.pathname;
-  hash = hash.substring(1);
+  var path = window.location.pathname;
+  var arrVars = path.split("/");
+  if (arrVars.length < 3) {
+    var hash = arrVars[1];
+    var type = 'no_type';
+  } else {
+    var type = arrVars[1];
+    var hash = arrVars[2];
+  }
+
   if (hash === '') hash = 'accesses';
-  
   if (hash != 'add_form') loadConfig(hash);
-  
 });
