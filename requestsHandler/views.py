@@ -36,6 +36,7 @@ from tasks import send_data_to_amo
 # TODO: Private hash forms
 # TODO: JIVOsite and Email
 
+# TODO: Change another distribution when delete form
 # TODO: test context passing to sentry
 # TODO: russian form names
 # TODO: start using React :)
@@ -51,11 +52,11 @@ def siteHandler(request):
     if not 'form' in request.GET:
         return HttpResponseBadRequest('Form field is required')
     
-    get_data = request.GET
+    get_data = request.GET.copy()
     get_data['form_type'] = 'site_forms'
     ip, is_routable = get_client_ip(request)
     send_data_to_amo.delay(request.user.username, request.POST, get_data, ip)
-    # send_data_to_amo(request.user.username, request.POST, request.GET, ip)
+    # send_data_to_amo(request.user.username, request.POST, get_data, ip)
         
     return HttpResponse('OK')
 
@@ -141,13 +142,21 @@ def setConfig(request):
                 [field['field'] for field in got_config['company_fields_to_check_dups']]
         
         additional_params = ['rec_lead_task_text', 'time_to_complete_rec_task', \
-            'another_distribution', 'generate_tasks_for_rec', 'tag_for_rec']
+            'generate_tasks_for_rec', 'tag_for_rec']
         for param in additional_params:
             if param in got_config:
                 if param == 'time_to_complete_rec_task':
                     got_config[param] *= 60
                 settings[param] = got_config[param]
-                
+        
+        if 'another_distribution' in got_config:
+            splited_distr = got_config['another_distribution'].split('/')
+            if len(splited_distr) == 2:
+                settings['another_dist_type'] = splited_distr[0]
+                settings['another_distribution'] = splited_distr[1]
+            else:
+                settings['another_distribution'] = not_chosen
+        
         if '_embedded' in user_cfg.cache:
             if 'distribution_settings' in got_config:
                 for idx, distr_settings in enumerate(got_config['distribution_settings']):
@@ -160,7 +169,7 @@ def setConfig(request):
                 else:
                     pairs = zip(settings['distribution_settings'], got_config['distribution_settings'])
                     if any(x != y for x, y in pairs):
-                        user_cfg.last_user_cache[form] = {}
+                        user_cfg.last_user_cache[config_type][form] = {}
                     settings['distribution_settings'] = got_config['distribution_settings']
             
             if 'responsible_user' in got_config:
@@ -250,9 +259,21 @@ def getConfig(request):
                     (requested_form, user_cfg.user.username))
         
         if '_embedded' in user_cfg.cache and requested_form != 'accesses':
-            config['forms'] = list(config[form_type].keys())
+            config['forms'] = []
+            for t in config_types:
+                if t in config:
+                    config['forms'] += [t+'/'+form_name for form_name in config[t]]
             config['forms'].append(not_chosen)
+                
             settings = config[form_type][requested_form]
+            
+            if 'another_distribution' in settings and 'another_dist_type' in settings and \
+                settings['another_dist_type'] in config and settings['another_distribution'] \
+                in config[settings['another_dist_type']]:
+                    
+                config['chosen_distr'] = settings['another_dist_type']+'/'+settings['another_distribution']
+            else:
+                config['chosen_distr'] = not_chosen
             
             def RepresentsInt(s):
                 try: 

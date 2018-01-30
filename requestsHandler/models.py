@@ -23,12 +23,10 @@ def get_default_config():
         'user' : 'user',
         'subdomain' : 'subdomain',
         'hash' : 'hash',
-        'site-forms' : {
-            
-        },
-        'jivo_site' : {
-            'allowed_enum' : []
-        }
+        'site_forms' : {},
+        'jivo_site' : {},
+        'email' : {},
+        'onpbx' : {},
     }
 
 def get_default_rights():
@@ -37,7 +35,6 @@ def get_default_rights():
     }
 
 # Create your models here.
-
 class UserConfig(models.Model):
     public_hash = models.CharField(max_length=40, default=_createHash(), 
         unique=True, db_index=True)

@@ -345,10 +345,9 @@ class AmoIntegr(object):
         
         else:
             # Add new users (everybody allowed, so nobody to delete)
-            for group_id in groups:
-                for user_id in users:
-                    if not user_id in users_cache:
-                        users_cache[user_id] = 0
+            for user_id in users:
+                if not user_id in users_cache:
+                    users_cache[user_id] = 0
         
         # Delete not active and free users and guys from other groups
         for user_id, user in users.items():
@@ -775,10 +774,10 @@ class AmoIntegr(object):
             responsible_user_id = kwargs['responsible_user_id']
         else:
             if 'distribution_settings' in kwargs and kwargs['distribution_settings']:
-                responsible_user_id = self.rotate_user(department_id, form, \
+                responsible_user_id = self.rotate_user(department_id, form, form_type, \
                     distribution_settings=kwargs['distribution_settings'])
             else:
-                responsible_user_id = self.rotate_user(department_id, form)
+                responsible_user_id = self.rotate_user(department_id, form, form_type)
         
         if contact_duplicates:
             united_data = self.unite_entities(

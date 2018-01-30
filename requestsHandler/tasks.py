@@ -45,7 +45,7 @@ def send_data_to_amo(username, post_data, get_data, ip=None):
         if not 'form' in get_data or not get_data['form'] in user_cfg.config[form_type]:
             message = 'No form in config %s' % user_cfg.user.username
             raise AmoException(message, {})
-        requested_form = user_cfg.config[form_type]['form']
+        requested_form = get_data['form']
         
         api = AmoIntegr(user_cfg)
         settings = user_cfg.config[form_type][requested_form]
@@ -57,10 +57,17 @@ def send_data_to_amo(username, post_data, get_data, ip=None):
             internal_kwargs['distribution_settings'] = \
                settings['distribution_settings']
                
-        if 'another_distribution' in settings:
+        if 'another_distribution' in settings and 'another_dist_type' in settings:
             another_distribution = settings['another_distribution']
-            if another_distribution != not_chosen and another_distribution != requested_form:
-                another_conform = user_cfg.config[form_type][another_distribution]
+            type_another_form = settings['another_dist_type']
+            
+            if another_distribution != not_chosen and \
+                (another_distribution != requested_form or type_another_form != form_type) and \
+                another_distribution and type_another_form and \
+                type_another_form in user_cfg.config and \
+                another_distribution in user_cfg.config[type_another_form]:
+                    
+                another_conform = user_cfg.config[type_another_form][another_distribution]
                 department_id = -1
                 if 'department_id' in another_conform and \
                     another_conform['department_id'] != not_chosen:
@@ -74,6 +81,7 @@ def send_data_to_amo(username, post_data, get_data, ip=None):
                     another_conform['distribution_settings']:
                     internal_kwargs['distribution_settings'] = another_conform['distribution_settings']
                 requested_form = another_distribution
+                form_type = type_another_form
         
         reslut = api.send_order_data(
             contact_data = data_to_send['contact_data'], 

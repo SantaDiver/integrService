@@ -16,7 +16,7 @@
 </head>
 
 <div class="navbar navbar-default">
-  <a class="navbar-brand" href="/change_company">{{username}}</a>
+  <a class="navbar-brand" href="/">{{username}}</a>
   <ul class="nav navbar-nav">
     <li><a href="/accesses">Доступы в amoCRM</a></li>
     <li class="dropdown">
@@ -29,7 +29,40 @@
         <li><a href="/site_forms/add_form">Добавить форму</a></li>
       </ul>
     </li>
-    <li><a href="/jivo_site">JivoSITE</a></li>
+    
+    <li class="dropdown">
+      <a href="/" class="dropdown-toggle" data-toggle="dropdown">JivoSITE<span class="caret"></span></a>
+      <ul class="dropdown-menu" role="menu">
+        {% for conf in config.jivo_site %}
+          <li><a href="/jivo_site/{{conf}}">{{conf}}</a></li>
+        {% endfor %}
+        <li class="divider"></li>
+        <li><a href="/jivo_site/add_form">Добавить форму</a></li>
+      </ul>
+    </li>
+    
+    <li class="dropdown">
+      <a href="/" class="dropdown-toggle" data-toggle="dropdown">Email<span class="caret"></span></a>
+      <ul class="dropdown-menu" role="menu">
+        {% for conf in config.email %}
+          <li><a href="/email/{{conf}}">{{conf}}</a></li>
+        {% endfor %}
+        <li class="divider"></li>
+        <li><a href="/email/add_form">Добавить форму</a></li>
+      </ul>
+    </li>
+    
+    <li class="dropdown">
+      <a href="/" class="dropdown-toggle" data-toggle="dropdown">Телефония<span class="caret"></span></a>
+      <ul class="dropdown-menu" role="menu">
+        {% for conf in config.email %}
+          <li><a href="/onpbx/{{conf}}">{{conf}}</a></li>
+        {% endfor %}
+        <li class="divider"></li>
+        <li><a href="/onpbx/add_form">Добавить форму</a></li>
+      </ul>
+    </li>
+    
   </ul>
   
   <ul class="nav navbar-nav navbar-right">

@@ -360,7 +360,7 @@ $(document).ready(function(){
             'rec_lead_task_text' : config[type][hash]['rec_lead_task_text'],
             'time_to_complete_rec_task' : config[type][hash]['time_to_complete_rec_task']/60,
             'tag_for_rec' : config[type][hash]['tag_for_rec'],
-            'another_distribution' : config[type][hash]['another_distribution'],
+            'another_distribution' : config['chosen_distr'],
             'distribution_settings' : config[type][hash]['distribution_settings'],
             
             'contact_fields': contact_fields,
