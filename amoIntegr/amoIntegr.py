@@ -782,7 +782,7 @@ class AmoIntegr(object):
         if contact_duplicates:
             united_data = self.unite_entities(
                 'contacts', 
-                contact_duplicates[0]['custom_fields'],
+                list(contact_duplicates[0]['custom_fields']),
                 self.translate_fields(contact_data['custom_fields'], 'contacts')
             )
             tags = contact_data['tags']
@@ -814,7 +814,7 @@ class AmoIntegr(object):
         if company_duplicates:
             united_data = self.unite_entities(
                 'companies', 
-                company_duplicates[0]['custom_fields'],
+                list(company_duplicates[0]['custom_fields']),
                 self.translate_fields(company_data['custom_fields'], 'companies')
             )
             tags = company_data['tags']

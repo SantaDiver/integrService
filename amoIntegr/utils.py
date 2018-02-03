@@ -40,7 +40,7 @@ def time_in_range(now, start, end):
 config_types = {
     'site_forms' : [], 
     'jivo_site' : ['event_name', 'chat_id', 'widget_id', 'visitor.name'], 
-    'onpbx' : [], 
+    'onpbx' : ['phone', 'Телефония'], 
     'email' : ['recipient', 'sender', 'from.name', 'from.email', 'subject', \
         'body-plain', 'stripped-text', 'stripped-signature', 'body-html', \
         'stripped-html', 'attachment-count', 'Email']

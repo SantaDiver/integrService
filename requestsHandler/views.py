@@ -21,22 +21,27 @@ from django.contrib.auth.models import User
 from dadata.plugins.django import DjangoDaDataClient
 from raven.contrib.django.raven_compat.models import client
 from ipware import get_client_ip
+from celery import chain
 
 sys.path.insert(0, './amoIntegr')
 sys.path.insert(0, './requestsHandler')
 from amoIntegr import AmoIntegr
 from amoException import AmoException
-from conform_fields import conform_fields, find_pipline_id
+from conform_fields import conform_fields, find_pipline_id, unflatten
 from utils import one_by_one, zero_department, not_chosen, ending_statuses, weekdays
 from utils import get_config_forms, config_types
 from requests_logger import log_request, log_exception, log_info, Message_type, \
     get_current_function
-from tasks import send_data_to_amo
-    
-# TODO: Private hash forms
-# TODO: JIVOsite and Email
+from tasks import send_data_to_amo, rotate_user
 
+    
+# TODO: Email exceptions
+# TODO: show paths on frontend
+
+# TODO: JIVOsite
 # TODO: Change another distribution when delete form
+# TODO: tags in email/jivo etc
+# TODO: scan for phone in email
 # TODO: test context passing to sentry
 # TODO: russian form names
 # TODO: start using React :)
@@ -84,7 +89,39 @@ def emailHandler(request):
             post_data['from.email'] = email
         
     
-    send_data_to_amo(post_data, get_data)
+    send_data_to_amo.delay(post_data, get_data)
+    
+    return HttpResponse('OK')
+    
+@csrf_exempt
+def onpbxHandler(request):
+    if request.method != 'POST':
+        return HttpResponseBadRequest('Waiting for POST request')
+    if not 'private_hash' in request.GET:
+        return HttpResponseBadRequest('Public hash field is required')
+    if not 'form' in request.GET:
+        return HttpResponseBadRequest('Form field is required')
+        
+    get_data = request.GET.copy()
+    get_data['form_type'] = 'onpbx'
+    
+    post_data = unflatten(request.POST)
+    
+    if 'contact' in post_data and 'add' in post_data['contact']:
+        for key, c in post_data['contact']['add'].items():
+            splited_name = c['name'].split(' ')
+            if len(splited_name) > 1:
+                c['phone'] = splited_name[1]
+                if splited_name[0] == 'Пропущенный':
+                    chain(
+                        rotate_user(c, get_data, None), 
+                        send_data_to_amo(c, get_data, None)
+                    ).apply_async()
+                    # rotate_user(c, get_data, None)
+                    # send_data_to_amo(c, get_data, None)
+                elif splited_name[0] == 'Входящий':
+                    send_data_to_amo.delay(c, get_data, None)
+                    # send_data_to_amo(c, get_data, None)
     
     return HttpResponse('OK')
     

@@ -106,10 +106,11 @@ def conform_fields(data, conformity, rights, ip=None):
                         })
                 digits = re.findall(r'\d+', value)
                 digits = ''.join(digits)
-                internal_kwargs['additional_data_to_query'][tdict[data_type]][phone_field].append({
-                    'WORK' : digits[-digits_to_query:]
-                })
-    
+                if len(digits) > 6:
+                    internal_kwargs['additional_data_to_query'][tdict[data_type]][phone_field].append({
+                        'WORK' : digits[-digits_to_query:]
+                    })
+        
     return (data_to_send, generate_tasks_for_rec, department_id, internal_kwargs)
     
 def find_pipline_id(pipelines, name):
@@ -117,3 +118,16 @@ def find_pipline_id(pipelines, name):
         for status_id, status in pipeline['statuses'].items():
             if pipeline['name'] == name.split('/')[0] and status['name'] == name.split('/')[1]:
                 return status_id
+                
+def unflatten(dictionary):
+    resultDict = dict()
+    for key, value in dictionary.items():
+        parts = key.split("[")
+        d = resultDict
+        for part in parts[:-1]:
+            part = part[:-1]
+            if part not in d:
+                d[part] = dict()
+            d = d[part]
+        d[parts[-1][:-1]] = value
+    return resultDict

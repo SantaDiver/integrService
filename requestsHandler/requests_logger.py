@@ -18,6 +18,7 @@ except:
 max_bytes = 50*1024*1024
 backup_count = 2
 logger_name = 'requests_logger_'
+unknown_username = '__you_tried__'
 
 from enum import Enum
 class Message_type(Enum):

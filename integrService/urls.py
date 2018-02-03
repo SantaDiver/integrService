@@ -26,6 +26,7 @@ urlpatterns = [
     url(r'^requestsHandler/', include('requestsHandler.urls')),
     url(r'siteHandler$', requestsHandler_views.siteHandler, name='siteHandler'),
     url(r'emailHandler$', requestsHandler_views.emailHandler, name='emailHandler'),
+    url(r'onpbxHandler', requestsHandler_views.onpbxHandler, name='onpbxHandler'),
     url(r'setConfig', requestsHandler_views.setConfig, name='setConfig'),
     url(r'getConfig', requestsHandler_views.getConfig, name='getConfig'),
     url(r'login', requestsHandler_views.login_user, name='login'),
