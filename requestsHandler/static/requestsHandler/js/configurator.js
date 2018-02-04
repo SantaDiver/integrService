@@ -27,7 +27,7 @@ function accessesSchema(config) {
 
 function formSchema(config){
   return {
-    'title': 'Форма заявок с сайта',
+    'title': 'Правила обработки',
     'type': 'object',
     'properties' : {
       'responsible_user' : {
@@ -267,7 +267,30 @@ function formSchema(config){
             }
           }
         }
+      },
+      
+      // ----------------------------------------------------------
+      
+      'exceptions' : {
+        'type': 'array',
+        'options': {
+          'collapsed': true
+        },
+        'format': 'table',
+        'propertyOrder': 64,
+        'title': 'Исключения для формы',
+        'uniqueItems': true,
+        'items': {
+          'type': 'object',
+          'title': 'Исключение',
+          'properties': {
+            'exception': {
+              'type': 'string',
+            }
+          }
+        }
       }
+      
     }
   };
 } 
@@ -297,6 +320,20 @@ $(document).ready(function(){
                 config[type][hash]['allowed_enum'];
             }
           }
+          
+          handlerTypes = {
+            'email' : 'emailHandler',
+            'onpbx' : 'onpbxHandler',
+            'site_forms' : 'siteHandler'
+          }
+          isPublic = {
+            'email' : 'private_hash',
+            'onpbx' : 'private_hash',
+            'site_forms' : 'public_hash'
+          }
+          $('.form-path').text(document.domain+'/'+handlerTypes[type]+'?form='+hash+ 
+            '&'+isPublic[type]+'='+config[isPublic[type]]);
+          $('.form-path').show();
         }
     
         // Set default options
@@ -366,10 +403,12 @@ $(document).ready(function(){
             'contact_fields': contact_fields,
             'contact_fields_to_check_dups' : contact_fields_to_check_dups,
             
-            'company_fields': company_fields,
+            'company_fields' : company_fields,
             'company_fields_to_check_dups' : company_fields_to_check_dups,
             
-            'lead_fields': lead_fields,
+            'lead_fields' : lead_fields,
+            
+            'exceptions' : config[type][hash]['exceptions']
           });
         }
         

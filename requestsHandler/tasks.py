@@ -99,16 +99,31 @@ def send_data_to_amo(post_data, get_data, ip=None):
             generate_tasks_for_rec, internal_kwargs = eject_settings(post_data, get_data, ip)
         username = user_cfg.user.username
         
-        result = api.send_order_data(
-            contact_data = data_to_send['contact_data'], 
-            lead_data = data_to_send['lead_data'], 
-            company_data = data_to_send['company_data'], 
-            form = requested_form,
-            form_type = form_type,
-            department_id = department_id, 
-            generate_tasks_for_rec = generate_tasks_for_rec,
-            **internal_kwargs
-        )    
+        valid_data_to_send = True
+        
+        settings = user_cfg.config[form_type][requested_form]
+        exception_types = {
+            'email' : 'from.email',
+            'onpbx' : 'phone'
+        }
+        if form_type in exception_types:
+            insptected_field = post_data[exception_types[form_type]]
+            for exception in settings.get('exceptions', []):
+                if exception['exception'] in insptected_field:
+                    valid_data_to_send = False
+                    log_info('Data is excepted', user_cfg.user.username, get_current_function(), post_data)
+        
+        if valid_data_to_send:
+            result = api.send_order_data(
+                contact_data = data_to_send['contact_data'], 
+                lead_data = data_to_send['lead_data'], 
+                company_data = data_to_send['company_data'], 
+                form = requested_form,
+                form_type = form_type,
+                department_id = department_id, 
+                generate_tasks_for_rec = generate_tasks_for_rec,
+                **internal_kwargs
+            )    
         
         user_cfg.save()
         

@@ -20,7 +20,7 @@
   <ul class="nav navbar-nav">
     <li><a href="/accesses">Доступы в amoCRM</a></li>
     <li class="dropdown">
-      <a href="/" class="dropdown-toggle" data-toggle="dropdown">Пользователские формы<span class="caret"></span></a>
+      <a href="/" class="dropdown-toggle" data-toggle="dropdown">Формы сайта<span class="caret"></span></a>
       <ul class="dropdown-menu" role="menu">
         {% for conf in config.site_forms %}
           <li><a href="/site_forms/{{conf}}">{{conf}}</a></li>
@@ -90,6 +90,10 @@
       Неверные данные для входа в amoCRM!
       <br><a href="/accesses">Доступы в amoCRM</a>
     </div>
+    <div class="alert alert-success form-path" role="alert" hidden>
+      Неверные данные для входа в amoCRM!
+    </div>
+    
     <div id="editor_holder"></div>
     
     <div class="row">

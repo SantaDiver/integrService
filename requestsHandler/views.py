@@ -89,7 +89,8 @@ def emailHandler(request):
             post_data['from.email'] = email
         
     
-    send_data_to_amo.delay(post_data, get_data)
+    # send_data_to_amo.delay(post_data, get_data)
+    send_data_to_amo(post_data, get_data)
     
     return HttpResponse('OK')
     
@@ -208,7 +209,7 @@ def setConfig(request):
                 [field['field'] for field in got_config['company_fields_to_check_dups']]
         
         additional_params = ['rec_lead_task_text', 'time_to_complete_rec_task', \
-            'generate_tasks_for_rec', 'tag_for_rec']
+            'generate_tasks_for_rec', 'tag_for_rec', 'exceptions']
         for param in additional_params:
             if param in got_config:
                 if param == 'time_to_complete_rec_task':
@@ -428,6 +429,8 @@ def getConfig(request):
                     
             config['weekdays'] = weekdays
             config['form_type'] = form_type
+            config['public_hash'] = user_cfg.public_hash
+            config['private_hash'] = user_cfg.private_hash
         
         log_info('Response', user_cfg.user.username, get_current_function(), config)
         return HttpResponse(json.dumps(config, sort_keys=True, ensure_ascii=False))
