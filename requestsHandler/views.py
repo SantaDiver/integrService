@@ -34,10 +34,6 @@ from requests_logger import log_request, log_exception, log_info, Message_type, 
     get_current_function
 from tasks import send_data_to_amo, rotate_user
 
-    
-# TODO: Email exceptions
-# TODO: show paths on frontend
-
 # TODO: JIVOsite
 # TODO: Change another distribution when delete form
 # TODO: tags in email/jivo etc
@@ -94,6 +90,7 @@ def emailHandler(request):
     
     return HttpResponse('OK')
     
+# Form name should be equal to phone number called
 @csrf_exempt
 def onpbxHandler(request):
     if request.method != 'POST':
@@ -111,18 +108,20 @@ def onpbxHandler(request):
     if 'contact' in post_data and 'add' in post_data['contact']:
         for key, c in post_data['contact']['add'].items():
             splited_name = c['name'].split(' ')
-            if len(splited_name) > 1:
+            if len(splited_name) > 2:
                 c['phone'] = splited_name[1]
-                if splited_name[0] == 'Пропущенный':
-                    chain(
-                        rotate_user(c, get_data, None), 
-                        send_data_to_amo(c, get_data, None)
-                    ).apply_async()
-                    # rotate_user(c, get_data, None)
-                    # send_data_to_amo(c, get_data, None)
-                elif splited_name[0] == 'Входящий':
-                    send_data_to_amo.delay(c, get_data, None)
-                    # send_data_to_amo(c, get_data, None)
+                called_phone = splited_name[2].split('-')[0][1:]
+                if called_phone==str(get_data['form']):
+                    if splited_name[0] == 'Пропущенный':
+                        chain(
+                            rotate_user(c, get_data, None), 
+                            send_data_to_amo(c, get_data, None)
+                        ).apply_async()
+                        # rotate_user(c, get_data, None)
+                        # send_data_to_amo(c, get_data, None)
+                    elif splited_name[0] == 'Входящий':
+                        send_data_to_amo.delay(c, get_data, None)
+                        # send_data_to_amo(c, get_data, None)
     
     return HttpResponse('OK')
     
