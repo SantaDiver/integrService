@@ -16,8 +16,11 @@ def conform_fields(data, conformity, rights, ip=None):
             'Accept' : 'application/json',
             'Authorization' : 'Token ' + settings.DADATA_KEY
         })
-        # city = resp.json()['location']['data']['city']
-        # region = resp.json()['location']['data']['region']
+        try:
+            city = resp.json()['location']['data']['city']
+            region = resp.json()['location']['data']['region']
+        except Exception as e:
+            pass
 
     data_to_send = {
         'contact_data' : {},

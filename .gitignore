@@ -8,3 +8,4 @@ myvenv
 nohup.out
 *.sqlite
 *.pid
+/src

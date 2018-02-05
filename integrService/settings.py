@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '1y7#)4^x3q%ee1^j#q3fd-(en*yhup_=ig-hkz2jm0=(-f=7o0'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
@@ -160,7 +160,7 @@ LOGGING = {
             'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
             'maxBytes' : 1024*1024*5, # 5 MB
-            'filename': os.path.join(BASE_DIR, 'uncought_exceptions.log'),
+            'filename': os.path.join(BASE_DIR, './logs/uncought_exceptions.log'),
             'formatter':'standard',
         }
     },
