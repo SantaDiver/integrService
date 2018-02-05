@@ -22,7 +22,7 @@ from requestsHandler import views as requestsHandler_views
 
 urlpatterns = [
     url(r'^su/', include('django_su.urls')),
-    url(r'^admin', admin.site.urls),
+    url(r'^admin/', admin.site.urls),
     url(r'^requestsHandler/', include('requestsHandler.urls')),
     url(r'siteHandler', requestsHandler_views.siteHandler, name='siteHandler'),
     url(r'emailHandler', requestsHandler_views.emailHandler, name='emailHandler'),

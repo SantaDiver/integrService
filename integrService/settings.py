@@ -26,8 +26,7 @@ SECRET_KEY = '1y7#)4^x3q%ee1^j#q3fd-(en*yhup_=ig-hkz2jm0=(-f=7o0'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['amointegr-python-santadiver.c9users.io']
-
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Application definition
 
@@ -83,12 +82,11 @@ WSGI_APPLICATION = 'integrService.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'integrservice',
-        'USER': 'snmsoft',
-        'PASSWORD': '123123123',
-        'HOST': 'localhost',
-        'PORT': '',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'HOST': 'db',
+        'PORT': 5432,
     }
 }
 
@@ -130,6 +128,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = '/static'
 
 # Adding SNM code after this comment
 AUTHENTICATION_BACKENDS = (
@@ -145,7 +144,7 @@ DADATA_SECRET = 'ad35dc25999cd6b03320be03f24fa14aa144fba8'
 
 RAVEN_CONFIG = {
     'dsn': 'https://69c151a0975e42f5970c262ef7fa4339:c3fb3b6ba224472da3f1c8018726b91e@sentry.io/264422',
-    'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
+    # 'release': raven.fetch_git_sha(os.path.dirname(os.pardir)),
 }
 
 LOGGING = {
@@ -175,10 +174,37 @@ LOGGING = {
 }
 
 # Celery settings
-CELERY_BROKER_URL = 'amqp://guest:guest@localhost//'
+# CELERY_BROKER_URL = 'amqp://guest:guest@localhost//'
+
+REDIS_PORT = 6379
+REDIS_DB = 0
+REDIS_HOST = os.environ.get('REDIS_PORT_6379_TCP_ADDR', 'redis')
+
+RABBIT_HOSTNAME = os.environ.get('RABBIT_PORT_5672_TCP', 'rabbit')
+
+if RABBIT_HOSTNAME.startswith('tcp://'):
+    RABBIT_HOSTNAME = RABBIT_HOSTNAME.split('//')[1]
+
+CELERY_BROKER_URL = os.environ.get('BROKER_URL', '')
+if not CELERY_BROKER_URL:
+    CELERY_BROKER_URL = 'amqp://{user}:{password}@{hostname}/{vhost}/'.format(
+        user=os.environ.get('RABBIT_ENV_USER', 'admin'),
+        password=os.environ.get('RABBIT_ENV_RABBITMQ_PASS', 'mypass'),
+        hostname=RABBIT_HOSTNAME,
+        vhost=os.environ.get('RABBIT_ENV_VHOST', ''))
+
+CELERY_IGNORE_RESULT = True
+CELERY_SEND_TASK_ERROR_EMAILS = False
+CELERY_ACKS_LATE = True
+
+# CELERY_RESULT_BACKEND = 'db+sqlite:///results.sqlite'
+# Set redis as celery result backend
+CELERY_RESULT_BACKEND = 'redis://%s:%d/%d' % (REDIS_HOST, REDIS_PORT, REDIS_DB)
+CELERY_REDIS_MAX_CONNECTIONS = 1
 
 #: Only add pickle to this list if your broker is secured
 #: from unwanted access (see userguide/security.html)
 CELERY_ACCEPT_CONTENT = ['json']
-CELERY_RESULT_BACKEND = 'db+sqlite:///results.sqlite'
 CELERY_TASK_SERIALIZER = 'json'
+
+CELERYD_HIJACK_ROOT_LOGGER = False

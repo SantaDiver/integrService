@@ -1,0 +1,83 @@
+version: '3'
+
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx01
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./config/nginx:/etc/nginx/conf.d
+      - ./static:/static
+    depends_on:
+      - web
+
+  # Redis - result backend
+  redis:
+    image: redis:2.8.19
+    hostname: redis
+    restart: always
+
+  # RabbitMQ - queue
+  rabbit:
+    hostname: rabbit
+    image: rabbitmq:3-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=mypass
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # here, we can access rabbitmq management plugin
+    restart: always
+
+  db:
+    image: postgres
+    volumes:
+        - postgres:/var/lib/postgresql/data
+    restart: always
+
+  web:
+    build: .
+    container_name: dj01
+    hostname: web
+    command: bash -c "
+        python manage.py migrate
+        && python manage.py collectstatic --noinput
+        && gunicorn integrService.wsgi:application --bind 0.0.0.0:8000"
+    volumes:
+      - .:/code
+      - ./static:/static
+    expose:
+      - "8000"
+    depends_on:
+      - db
+    links:
+      - rabbit
+      - redis
+    restart: always
+
+  # Celery worker
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A integrService worker -l info
+    volumes:
+      - .:/code
+    links:
+      - rabbit
+      - redis
+    depends_on:
+      - rabbit
+    restart: always
+
+  visualizer:
+    image: dockersamples/visualizer:stable
+    ports:
+    - "8080:8080"
+    volumes:
+    - "/var/run/docker.sock:/var/run/docker.sock"
+    restart: always
+
+volumes:
+    postgres:
