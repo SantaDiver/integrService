@@ -18,7 +18,7 @@ from django.http import Http404
 from requestsHandler.models import UserConfig
 from django.contrib.auth.models import User
 
-from dadata.plugins.django import DjangoDaDataClient
+# from dadata.plugins.django import DjangoDaDataClient
 from raven.contrib.django.raven_compat.models import client
 from ipware import get_client_ip
 from celery import chain
