@@ -4,7 +4,7 @@ import re
 
 from django.conf import settings
 
-from dadata.plugins.django import DjangoDaDataClient
+# from dadata.plugins.django import DjangoDaDataClient
 from utils import one_by_one, not_chosen, default_name, phone_field, email_field
 
 digits_to_query = 7
@@ -84,8 +84,8 @@ def conform_fields(data, conformity, rights, ip=None):
 
     internal_kwargs['additional_data_to_query']['contacts'][phone_field] = []
     internal_kwargs['additional_data_to_query']['companies'][phone_field] = []
-    if 'dadata_phone_check' in rights and rights['dadata_phone_check']:
-        client = DjangoDaDataClient()
+    # if 'dadata_phone_check' in rights and rights['dadata_phone_check']:
+    #     client = DjangoDaDataClient()
 
     tdict = {
         'contact_data' : 'contacts',
@@ -96,17 +96,17 @@ def conform_fields(data, conformity, rights, ip=None):
             data_to_send[data_type]['custom_fields']:
 
             for key,value in data_to_send[data_type]['custom_fields'][phone_field].items():
-                if 'dadata_phone_check' in rights and rights['dadata_phone_check']:
-                    client.phone = value
-                    client.phone.request()
-
-                    if client.result.phone != None:
-                        data_to_send[data_type]['custom_fields'][phone_field][key] = client.result.phone
-
-                    if client.result.number != None:
-                        internal_kwargs['additional_data_to_query'][tdict[data_type]][phone_field].append({
-                            'WORK' : client.result.number
-                        })
+                # if 'dadata_phone_check' in rights and rights['dadata_phone_check']:
+                #     client.phone = value
+                #     client.phone.request()
+                #
+                #     if client.result.phone != None:
+                #         data_to_send[data_type]['custom_fields'][phone_field][key] = client.result.phone
+                #
+                #     if client.result.number != None:
+                #         internal_kwargs['additional_data_to_query'][tdict[data_type]][phone_field].append({
+                #             'WORK' : client.result.number
+                #         })
                 digits = re.findall(r'\d+', value)
                 digits = ''.join(digits)
                 if len(digits) > 6:
