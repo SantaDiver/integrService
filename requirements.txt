@@ -12,3 +12,4 @@ django-su
 -e git+https://github.com/tigrus/dadata-python#egg=dadata
 redis
 gunicorn
+django-cors-headers

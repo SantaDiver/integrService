@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'jsoneditor',
     'raven.contrib.django.raven_compat',
     'simple_history',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -54,6 +55,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'integrService.urls'
@@ -138,6 +141,8 @@ AUTHENTICATION_BACKENDS = (
 
 LOGIN_URL = '/login'
 LOGOUT_REDIRECT_URL = '/login'
+
+CORS_ORIGIN_ALLOW_ALL = True
 
 DADATA_KEY = '2ffba1983986a5da48c4b1f3cd906406557cf736'
 DADATA_SECRET = 'ad35dc25999cd6b03320be03f24fa14aa144fba8'

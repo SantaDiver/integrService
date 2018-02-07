@@ -114,6 +114,7 @@ def send_data_to_amo(post_data, get_data, ip=None):
                     valid_data_to_send = False
                     log_info('Data is excepted', user_cfg.user.username, get_current_function(), post_data)
 
+        result = None
         if valid_data_to_send:
             result = api.send_order_data(
                 contact_data = data_to_send['contact_data'],
