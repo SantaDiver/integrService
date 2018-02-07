@@ -77,7 +77,7 @@ function formSchema(config){
         'propertyOrder': 10,
         'type' : 'string'
       },
-      
+
       'another_distribution': {
         'title': 'Использовать правила распределения из другой формы',
         'type': 'string',
@@ -86,7 +86,7 @@ function formSchema(config){
         'description': 'При включении, ВСЕ правила из этой формы игнорируются! \
           (распределение для форм будет общим)'
       },
-      
+
       'distribution_settings' : {
         'type': 'array',
         'options': {
@@ -148,7 +148,7 @@ function formSchema(config){
           }
         }
       },
-      
+
       // --------------------------------------------------
       'contact_fields_to_check_dups' : {
         'type': 'array',
@@ -196,7 +196,7 @@ function formSchema(config){
         }
       },
       // ---------------------------------------------------------
-      
+
       'company_fields_to_check_dups' : {
         'type': 'array',
         'options': {
@@ -243,7 +243,7 @@ function formSchema(config){
         }
       },
       // ----------------------------------------------------------
-      
+
       'lead_fields' : {
         'type': 'array',
         'options': {
@@ -268,9 +268,9 @@ function formSchema(config){
           }
         }
       },
-      
+
       // ----------------------------------------------------------
-      
+
       'exceptions' : {
         'type': 'array',
         'options': {
@@ -290,10 +290,10 @@ function formSchema(config){
           }
         }
       }
-      
+
     }
   };
-} 
+}
 
 $(document).ready(function(){
 
@@ -305,7 +305,7 @@ $(document).ready(function(){
           $('.invalid-amo').show();
           if (hash != 'accesses') return;
         }
-        
+
         $('.send').show();
         if (hash == 'accesses') var schema = accessesSchema(config);
         else {
@@ -316,11 +316,11 @@ $(document).ready(function(){
             var typesArray = ['contact_fields', 'company_fields', 'lead_fields'];
             var arrayLength = typesArray.length;
             for (var i = 0; i < arrayLength; i++) {
-              schema['properties'][typesArray[i]]['items']['properties']['site']['enum'] = 
+              schema['properties'][typesArray[i]]['items']['properties']['site']['enum'] =
                 config[type][hash]['allowed_enum'];
             }
           }
-          
+
           handlerTypes = {
             'email' : 'emailHandler',
             'onpbx' : 'onpbxHandler',
@@ -331,20 +331,20 @@ $(document).ready(function(){
             'onpbx' : 'private_hash',
             'site_forms' : 'public_hash'
           }
-          $('.form-path').text(document.domain+'/'+handlerTypes[type]+'?form='+hash+ 
-            '&'+isPublic[type]+'='+config[isPublic[type]]);
+          $('.form-path').text('http://'+document.domain+'/'+handlerTypes[type]+
+            '?form='+hash+'&'+isPublic[type]+'='+config[isPublic[type]]);
           $('.form-path').show();
         }
-    
+
         // Set default options
         JSONEditor.defaults.options.theme = 'bootstrap3';
-        
+
         // Initialize the editor
         var editor = new JSONEditor(document.getElementById('editor_holder'),{
           schema: schema,
           required_by_default	: true
         });
-        
+
         if (hash == 'accesses') {
           editor.setValue({
             'user' : config['user'],
@@ -365,7 +365,7 @@ $(document).ready(function(){
               'field' : config[type][hash]['fields_to_check_dups']['contacts'][field],
             });
           }
-          
+
           var company_fields = new Array();
           for (var field in config[type][hash]['company_data']) {
             company_fields.push({
@@ -379,7 +379,7 @@ $(document).ready(function(){
               'field' : config[type][hash]['fields_to_check_dups']['companies'][field],
             });
           }
-          
+
           var lead_fields = new Array();
           for (var field in config[type][hash]['lead_data']) {
             lead_fields.push({
@@ -387,7 +387,7 @@ $(document).ready(function(){
               'site' : config[type][hash]['lead_data'][field]
             });
           }
-          
+
           editor.setValue({
             'responsible_user' : config['default_user'],
             'department' : config['default_department'],
@@ -399,19 +399,19 @@ $(document).ready(function(){
             'tag_for_rec' : config[type][hash]['tag_for_rec'],
             'another_distribution' : config['chosen_distr'],
             'distribution_settings' : config[type][hash]['distribution_settings'],
-            
+
             'contact_fields': contact_fields,
             'contact_fields_to_check_dups' : contact_fields_to_check_dups,
-            
+
             'company_fields' : company_fields,
             'company_fields_to_check_dups' : company_fields_to_check_dups,
-            
+
             'lead_fields' : lead_fields,
-            
+
             'exceptions' : config[type][hash]['exceptions']
           });
         }
-        
+
         function getCookie(name) {
           var cookieValue = null;
           if (document.cookie && document.cookie != '') {
@@ -427,7 +427,7 @@ $(document).ready(function(){
           }
           return cookieValue;
         }
-        
+
         $('.send').click(function(){
           var csrftoken = getCookie('csrftoken');
           $.ajaxSetup({
@@ -442,7 +442,7 @@ $(document).ready(function(){
             location.reload();
           }, 'json');
         });
-        
+
         if (hash != 'accesses') {
           $('.delete-form').show();
           $('.delete-form').click(function(){
@@ -475,7 +475,7 @@ $(document).ready(function(){
                 }
               }
             });
-                        
+
 
           });
         }
