@@ -55,7 +55,7 @@ def siteHandler(request):
 
     get_data = request.GET.copy()
     get_data['form_type'] = 'site_forms'
-    ip, is_routable = get_client_ip(request)
+    ip = request.POST.get('ip', '')
     send_data_to_amo.delay(request.POST, get_data, ip)
 
     # send_data_to_amo(request.POST, get_data, ip)
