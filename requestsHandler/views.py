@@ -113,12 +113,8 @@ def onpbxHandler(request):
                 called_phone = splited_name[2].split('-')[0][1:]
                 if called_phone==str(get_data['form']):
                     if splited_name[0] == 'Пропущенный':
-                        chain(
-                            rotate_user(c, get_data, None),
-                            send_data_to_amo(c, get_data, None)
-                        ).apply_async()
+                        rotate_user.delay(c, get_data, None)
                         # rotate_user(c, get_data, None)
-                        # send_data_to_amo(c, get_data, None)
                     elif splited_name[0] == 'Входящий':
                         send_data_to_amo.delay(c, get_data, None)
                         # send_data_to_amo(c, get_data, None)

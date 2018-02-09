@@ -188,7 +188,8 @@ def rotate_user(post_data, get_data, ip=None):
                 )
 
         user_cfg.save()
-        return post_data, get_data, ip
+
+        return send_data_to_amo(post_data, get_data, None)
 
     except AmoException as e:
         context = e.context
