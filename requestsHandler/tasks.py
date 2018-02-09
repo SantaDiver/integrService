@@ -158,36 +158,36 @@ def rotate_user(post_data, get_data, ip=None):
         else:
             responsible_user_id = api.rotate_user(department_id, requested_form, form_type)
 
-        api.update_entity(
-            'contacts',
-            post_data['id'],
-            translate = False,
-            call = True,
-            updated_at = time.time(),
-            responsible_user_id = responsible_user_id
-        )
-
-        count_down = 4
-        tasks = []
-        while count_down > 0 and not tasks:
-            time.sleep(0.1)
-            tasks = api.get_entity(
-                'tasks',
-                element_id=post_data['id']
-            )['_embedded']['items']
-            count_down -= 1
-
-        for task in tasks:
-            result = api.update_task(
-                task_id = task['id'],
+        if responsible_user_id:
+            api.update_entity(
+                'contacts',
+                post_data['id'],
+                translate = False,
+                call = True,
                 updated_at = time.time(),
-                text = task['text'],
-                call=True,
                 responsible_user_id = responsible_user_id
             )
 
-        user_cfg.save()
+            count_down = 4
+            tasks = []
+            while count_down > 0 and not tasks:
+                time.sleep(0.1)
+                tasks = api.get_entity(
+                    'tasks',
+                    element_id=post_data['id']
+                )['_embedded']['items']
+                count_down -= 1
 
+            for task in tasks:
+                result = api.update_task(
+                    task_id = task['id'],
+                    updated_at = time.time(),
+                    text = task['text'],
+                    call=True,
+                    responsible_user_id = responsible_user_id
+                )
+
+        user_cfg.save()
         return post_data, get_data, ip
 
     except AmoException as e:
