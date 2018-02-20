@@ -120,6 +120,7 @@ def onpbxHandler(request):
                             send_data_to_amo.delay(c, get_data, None)
                             # send_data_to_amo(c, get_data, None)
     else:
+        post_data = request.POST.copy()
         on_pbx_hook.delay(post_data, get_data, None)
 
     return HttpResponse('')

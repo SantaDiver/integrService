@@ -216,7 +216,7 @@ def on_pbx_hook(post_data, get_data, ip=None):
             post_data['phone'] = post_data['caller_number']
             duplicates = api.get_entity(
                 'contacts',
-                query=post_data['caller_number']
+                query=post_data['caller_number'][1:]
             )['_embedded']['items']
 
             if duplicates:
