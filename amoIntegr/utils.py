@@ -1,5 +1,5 @@
 entity_optional_params = {
-    'contacts' : ['tags', 'created_at', 'updated_at', 'created_by', 
+    'contacts' : ['tags', 'created_at', 'updated_at', 'created_by',
         'company_name', 'leads_id', 'customers_id', 'company_id'],
     'leads' : ['tags', 'created_at', 'updated_at', 'status_id', 'pipeline_id',
         'sale', 'contacts_id', 'company_id'],
@@ -17,13 +17,13 @@ update_optional_params = {
 }
 
 get_optional_params = {
-    'contacts' : ['id[]', 'id', 'limit_rows', 'limit_offset', 
+    'contacts' : ['id[]', 'id', 'limit_rows', 'limit_offset',
         'responsible_user_id', 'query'],
-    'leads' : ['id[]', 'limit_rows', 'limit_offset', 'id', 'query', 
+    'leads' : ['id[]', 'limit_rows', 'limit_offset', 'id', 'query',
         'responsible_user_id', 'status'],
-    'companies' : ['id[]', 'limit_rows', 'limit_offset', 'id', 'query', 
+    'companies' : ['id[]', 'limit_rows', 'limit_offset', 'id', 'query',
         'responsible_user_id'],
-    'tasks' : ['id[]', 'id', 'limit_rows', 'limit_offset', 'element_id', 
+    'tasks' : ['id[]', 'id', 'limit_rows', 'limit_offset', 'element_id',
         'responsible_user_id', 'type']
 }
 
@@ -36,11 +36,19 @@ def time_in_range(now, start, end):
         return start <= now <= end
     else:
         return end <= now <= start
-        
+
+def RepresentsInt(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
 config_types = {
-    'site_forms' : [], 
-    'jivo_site' : ['event_name', 'chat_id', 'widget_id', 'visitor.name'], 
-    'onpbx' : ['phone', 'Телефония'], 
+    'site_forms' : [],
+    'jivo_site' : ['event_name', 'chat_id', 'widget_id', 'visitor.name'],
+    'onpbx' : ['phone', 'Телефония', 'caller_number', 'caller_name', 'domain',
+        'type', 'trunk', 'uuid', 'dtmf', 'rec_link'],
     'email' : ['recipient', 'sender', 'from.name', 'from.email', 'subject', \
         'body-plain', 'stripped-text', 'stripped-signature', 'body-html', \
         'stripped-html', 'attachment-count', 'Email']
@@ -50,7 +58,7 @@ def get_config_forms(config):
     for key in config_types:
         if key in config:
             config_names += config[key].keys()
-            
+
     return config_names
 
 one_by_one = 'По очереди'

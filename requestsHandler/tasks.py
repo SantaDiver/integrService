@@ -203,3 +203,43 @@ def rotate_user(post_data, get_data, ip=None):
             'get_data' : get_data
         })
         client.captureException()
+
+@task(ignore_result=True)
+def on_pbx_hook(post_data, get_data, ip=None):
+    try:
+        username=unknown_username
+        user_cfg, api, data_to_send, requested_form, form_type, department_id, \
+            generate_tasks_for_rec, internal_kwargs = eject_settings(post_data, get_data, ip)
+        username = user_cfg.user.username
+
+        if 'caller_number' in post_data:
+            post_data['phone'] = post_data['caller_number']
+            duplicates = api.get_entity(
+                'contacts',
+                query=post_data['caller_number']
+            )['_embedded']['items']
+
+            if duplicates:
+                for contact in duplicates:
+                    if 'created_at' in contact and time.time() - \
+                        contact['created_at'] < 3*60:
+                        return {}
+
+                return send_data_to_amo(post_data, get_data, None)
+            else:
+                return {}
+        else:
+            return {}
+
+    except AmoException as e:
+        context = e.context
+        log_exception('', username, get_current_function(), context)
+        if e.resend:
+            send_data_to_amo.retry(exc=e, countdown=retry_coef * send_data_to_amo.request.retries)
+            # send_data_to_amo.retry(exc=e, countdown=retry_coef)
+    except Exception as e:
+        log_exception('', username, get_current_function(), {
+            'post data' : post_data,
+            'get_data' : get_data
+        })
+        client.captureException()

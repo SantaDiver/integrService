@@ -29,10 +29,10 @@ from amoIntegr import AmoIntegr
 from amoException import AmoException
 from conform_fields import conform_fields, find_pipline_id, unflatten
 from utils import one_by_one, zero_department, not_chosen, ending_statuses, weekdays
-from utils import get_config_forms, config_types
+from utils import get_config_forms, config_types, RepresentsInt
 from requests_logger import log_request, log_exception, log_info, Message_type, \
     get_current_function
-from tasks import send_data_to_amo, rotate_user
+from tasks import send_data_to_amo, rotate_user, on_pbx_hook
 
 # TODO: JIVOsite
 # TODO: Change another distribution when delete form
@@ -67,7 +67,7 @@ def emailHandler(request):
     if request.method != 'POST':
         return HttpResponseBadRequest('Waiting for POST request')
     if not 'private_hash' in request.GET:
-        return HttpResponseBadRequest('Public hash field is required')
+        return HttpResponseBadRequest('Private hash field is required')
     if not 'form' in request.GET:
         return HttpResponseBadRequest('Form field is required')
 
@@ -96,7 +96,7 @@ def onpbxHandler(request):
     if request.method != 'POST':
         return HttpResponseBadRequest('Waiting for POST request')
     if not 'private_hash' in request.GET:
-        return HttpResponseBadRequest('Public hash field is required')
+        return HttpResponseBadRequest('Private hash field is required')
     if not 'form' in request.GET:
         return HttpResponseBadRequest('Form field is required')
 
@@ -105,21 +105,24 @@ def onpbxHandler(request):
 
     post_data = unflatten(request.POST)
 
-    if 'contact' in post_data and 'add' in post_data['contact']:
-        for key, c in post_data['contact']['add'].items():
-            splited_name = c['name'].split(' ')
-            if len(splited_name) > 2:
-                c['phone'] = splited_name[1]
-                called_phone = splited_name[2].split('-')[0][1:]
-                if called_phone==str(get_data['form']):
-                    if splited_name[0] == 'Пропущенный':
-                        rotate_user.delay(c, get_data, None)
-                        # rotate_user(c, get_data, None)
-                    elif splited_name[0] == 'Входящий':
-                        send_data_to_amo.delay(c, get_data, None)
-                        # send_data_to_amo(c, get_data, None)
+    if RepresentsInt(get_data['form']):
+        if 'contact' in post_data and 'add' in post_data['contact']:
+            for key, c in post_data['contact']['add'].items():
+                splited_name = c['name'].split(' ')
+                if len(splited_name) > 2:
+                    c['phone'] = splited_name[1]
+                    called_phone = splited_name[2].split('-')[0][1:]
+                    if called_phone==str(get_data['form']):
+                        if splited_name[0] == 'Пропущенный':
+                            rotate_user.delay(c, get_data, None)
+                            # rotate_user(c, get_data, None)
+                        elif splited_name[0] == 'Входящий':
+                            send_data_to_amo.delay(c, get_data, None)
+                            # send_data_to_amo(c, get_data, None)
+    else:
+        on_pbx_hook.delay(post_data, get_data, None)
 
-    return HttpResponse('OK')
+    return HttpResponse('')
 
 
 @login_required
@@ -336,13 +339,6 @@ def getConfig(request):
                 config['chosen_distr'] = settings['another_dist_type']+'/'+settings['another_distribution']
             else:
                 config['chosen_distr'] = not_chosen
-
-            def RepresentsInt(s):
-                try:
-                    int(s)
-                    return True
-                except ValueError:
-                    return False
 
             config['allowed_fields'] = {}
             config['allowed_statuses'] = []
