@@ -331,7 +331,7 @@ $(document).ready(function(){
             'onpbx' : 'private_hash',
             'site_forms' : 'public_hash'
           }
-          $('.form-path').text('http://'+document.domain+'/'+handlerTypes[type]+
+          $('.form-path').text('https://'+document.domain+'/'+handlerTypes[type]+
             '?form='+hash+'&'+isPublic[type]+'='+config[isPublic[type]]);
           $('.form-path').show();
         }
