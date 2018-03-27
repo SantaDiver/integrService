@@ -115,9 +115,9 @@ class AmoIntegr(object):
         resp = self.call('api/v2/account', 'GET', {
             'with' : 'custom_fields,users,pipelines,groups,note_types,task_types',
         })
-        if not type(resp['groups']) is dict:
-            resp['groups'] = {
-                '0' : resp['groups'][0]
+        if not type(resp['_embedded']['groups']) is dict:
+            resp['_embedded']['groups'] = {
+                '0' : resp['_embedded']['groups'][0]
             }
         resp['timestamp'] = time.time()
         self.user.cache = resp
