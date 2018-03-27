@@ -247,9 +247,10 @@ def setConfig(request):
                              settings['responsible_user_id'] = user_id
 
             if 'department' in got_config:
-                if got_config['department'] == zero_department:
-                    settings['department_id'] = 0
-                elif got_config['department'] == not_chosen:
+                # if got_config['department'] == zero_department:
+                #     settings['department_id'] = 0
+                # el
+                if got_config['department'] == not_chosen:
                     settings['department_id'] = not_chosen
                 else:
                     for group_id, group in user_cfg.cache['_embedded']['groups'].items():
@@ -388,17 +389,18 @@ def getConfig(request):
                     user_cfg.cache['_embedded']['groups'].items()]
             else:
                 config['allowed_departments'] = []
-            config['allowed_departments'].append(zero_department)
+            # config['allowed_departments'].append(zero_department)
             config['allowed_departments'].append(not_chosen)
 
             config['default_department'] = not_chosen
             if 'department_id' in settings:
-                if settings['department_id'] != 0 and settings['department_id'] != not_chosen:
+                # settings['department_id'] != 0 and
+                if settings['department_id'] != not_chosen:
                     config['default_department'] = [group['name'] for group_id, group in
                     user_cfg.cache['_embedded']['groups'].items() if
                         int(group_id) == int(settings['department_id'])][0]
-                elif settings['department_id'] == 0:
-                    config['default_department'] = zero_department
+                # elif settings['department_id'] == 0:
+                #     config['default_department'] = zero_department
 
             if 'pipelines' in settings:
                 for pipeline_id, pipeline in user_cfg.cache['_embedded']['pipelines'].items():
