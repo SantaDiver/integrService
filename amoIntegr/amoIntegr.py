@@ -113,8 +113,12 @@ class AmoIntegr(object):
 
     def force_to_update_cache(self):
         resp = self.call('api/v2/account', 'GET', {
-            'with' : 'custom_fields,users,pipelines,groups,note_types,task_types'
+            'with' : 'custom_fields,users,pipelines,groups,note_types,task_types',
         })
+        if not type(resp['groups']) is dict:
+            resp['groups'] = {
+                '0' : resp['groups'][0]
+            }
         resp['timestamp'] = time.time()
         self.user.cache = resp
 
